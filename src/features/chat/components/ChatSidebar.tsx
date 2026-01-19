@@ -41,7 +41,7 @@ export default function ChatSidebar({
         {/* Header */}
         <div className="p-5 border-b border-gray-200 bg-white">
           <div className="flex items-center justify-between mb-4 md:mb-0">
-            <h2 className="text-xl font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+            <h2 className="text-xl font-bold bg-gradient-to-r from-red-600 to-red-700 bg-clip-text text-transparent">
               REDGO AI
             </h2>
             <button
@@ -60,7 +60,7 @@ export default function ChatSidebar({
               onNewChat();
               onClose();
             }}
-            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:from-amber-600 hover:to-orange-600 transition-all shadow-md hover:shadow-lg font-medium"
+            className="w-full flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-all shadow-md hover:shadow-lg font-medium"
           >
             <Plus className="w-5 h-5" />
             Chat Baru
@@ -82,20 +82,20 @@ export default function ChatSidebar({
                 }}
                 className={`w-full text-left px-4 py-3 rounded-xl transition-all ${
                   mode === m.id
-                    ? "bg-gradient-to-r from-amber-50 to-orange-50 border-2 border-amber-300 shadow-sm"
+                    ? "bg-gradient-to-r from-red-50 to-red-50 border-2 border-red-300 shadow-sm"
                     : "bg-white border-2 border-transparent hover:bg-gray-50 hover:border-gray-200"
                 }`}
               >
                 <div className="flex items-center gap-3">
                   <div
                     className={`w-2 h-2 rounded-full ${
-                      mode === m.id ? "bg-amber-500" : "bg-gray-300"
+                      mode === m.id ? "bg-red-600" : "bg-gray-300"
                     }`}
                   />
                   <div className="flex-1">
                     <div
                       className={`font-semibold text-sm ${
-                        mode === m.id ? "text-amber-900" : "text-gray-700"
+                        mode === m.id ? "text-red-900" : "text-gray-700"
                       }`}
                     >
                       {m.name}

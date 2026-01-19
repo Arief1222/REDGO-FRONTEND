@@ -79,7 +79,14 @@ const SidebarContent: MenuItem[] = [
             id: uniqueId(),
             url: ROUTES.CHAT,
             permission: PERMISSIONS.CHAT_VIEW,
-          }
+          },
+          {
+            name: "Prompts",
+            icon: "solar:chat-round-dots-line-duotone",
+            id: uniqueId(),
+            url: ROUTES.PROMPTS,
+            permission: PERMISSIONS.PROMPT_VIEW,
+          },
         ],
       },
     ],

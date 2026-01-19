@@ -87,8 +87,8 @@ export { FormHelperText } from './FormHelperText';
 export type { FormHelperTextProps } from './FormHelperText';
 
 // Export Form
-export { Form } from './Form';
-export type { FormProps } from './Form';
+export { Form } from './form';
+export type { FormProps } from './form';
 
 // Export Tabs
 export { Tabs, Tab, TabPanel } from './Tabs';

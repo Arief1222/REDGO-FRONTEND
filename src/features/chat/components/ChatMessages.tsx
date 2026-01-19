@@ -1,6 +1,7 @@
-import { Sparkles, User } from "lucide-react";
+import { User } from "lucide-react";
 import type { ChatMessage } from "@/app/api/chat";
 import type { RefObject } from "react";
+import logoImage from "@/assets/images/logos/pp.jpeg";
 
 type Props = {
   messages: ChatMessage[];
@@ -96,14 +97,18 @@ export default function ChatMessages({ messages, loading, endRef }: Props) {
         {messages.map((m) => (
           <div key={m.id} className="flex gap-4 items-start">
             <div
-              className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center ${
+              className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden ${
                 m.role === "assistant"
-                  ? "bg-gradient-to-br from-amber-400 to-orange-500 shadow-md"
+                  ? "shadow-md"
                   : "bg-gray-200"
               }`}
             >
               {m.role === "assistant" ? (
-                <Sparkles className="w-5 h-5 text-white" />
+                <img 
+                  src={logoImage} 
+                  alt="REDGO AI" 
+                  className="w-full h-full object-cover"
+                />
               ) : (
                 <User className="w-5 h-5 text-gray-600" />
               )}
@@ -130,22 +135,26 @@ export default function ChatMessages({ messages, loading, endRef }: Props) {
 
         {loading && (
           <div className="flex gap-4 items-start">
-            <div className="flex-shrink-0 w-10 h-10 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md">
-              <Sparkles className="w-5 h-5 text-white" />
+            <div className="flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden shadow-md">
+              <img 
+                src="https://i.ibb.co.com/F4k8gkg/design-without-title-17.png" 
+                alt="REDGO AI" 
+                className="w-full h-full object-cover"
+              />
             </div>
             <div className="flex-1">
               <div className="bg-white rounded-2xl px-5 py-4 shadow-sm border border-gray-100">
                 <div className="flex gap-1.5">
                   <div
-                    className="w-2 h-2 bg-amber-400 rounded-full animate-bounce"
+                    className="w-2 h-2 bg-red-500 rounded-full animate-bounce"
                     style={{ animationDelay: "0ms" }}
                   ></div>
                   <div
-                    className="w-2 h-2 bg-amber-400 rounded-full animate-bounce"
+                    className="w-2 h-2 bg-red-500 rounded-full animate-bounce"
                     style={{ animationDelay: "150ms" }}
                   ></div>
                   <div
-                    className="w-2 h-2 bg-amber-400 rounded-full animate-bounce"
+                    className="w-2 h-2 bg-red-500 rounded-full animate-bounce"
                     style={{ animationDelay: "300ms" }}
                   ></div>
                 </div>

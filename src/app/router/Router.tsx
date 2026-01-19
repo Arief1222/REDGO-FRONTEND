@@ -32,6 +32,7 @@ const UserPage = Loadable(lazy(() => import('@/features/user/UserPage')));
 const RolePage = Loadable(lazy(() => import('@/features/role/RolePage')));
 const RagPage = Loadable(lazy(() => import('@/features/rag/RagPage')));
 const ChatPage = Loadable(lazy(() => import('@/features/chat/ChatPage')));
+const PromptPage = Loadable(lazy(() => import('@/features/prompts/PromptPage')));
 // Error pages
 const ForbiddenPage = Loadable(lazy(() => import('@/features/errors/403Page')));
 const NotFoundPage = Loadable(lazy(() => import('@/features/errors/404Page')));
@@ -106,6 +107,14 @@ const Router = [
         element: (
           <PermissionGuard permission={PERMISSIONS.CHAT_VIEW}>
             <ChatPage />
+          </PermissionGuard>
+        )
+      },
+      {
+        path: 'prompts',
+        element: (
+          <PermissionGuard permission={PERMISSIONS.PROMPT_VIEW}>
+            <PromptPage />
           </PermissionGuard>
         )
       }

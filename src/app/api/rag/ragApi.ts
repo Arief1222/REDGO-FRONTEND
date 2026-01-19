@@ -1,5 +1,5 @@
 import { apiService } from '@/app/services/apiService';
-import type { UploadRagResponse } from './type';
+import type { RagDocument, UploadRagResponse } from './type';
 
 export const ragApi = {
   listDocuments: (params?: { limit?: number; page?: number; search?: string }) =>

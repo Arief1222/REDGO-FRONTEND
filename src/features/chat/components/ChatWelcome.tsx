@@ -1,5 +1,5 @@
-
-import { Sparkles } from "lucide-react";
+// Import logo dari assets
+import logoImage from "@/assets/images/logos/pp.jpeg";
 
 interface ChatWelcomeProps {
   onPromptClick: (prompt: string) => void;
@@ -31,8 +31,12 @@ export function ChatWelcome({ onPromptClick }: ChatWelcomeProps) {
 
   return (
     <div className="h-full flex flex-col items-center justify-center px-4 max-w-4xl mx-auto">
-      <div className="w-20 h-20 bg-gradient-to-br from-amber-400 via-orange-500 to-red-500 rounded-3xl flex items-center justify-center mb-8 shadow-xl shadow-orange-200">
-        <Sparkles className="w-10 h-10 text-white" />
+      <div className="w-24 h-24 rounded-3xl flex items-center justify-center mb-8 shadow-xl shadow-red-200 overflow-hidden">
+        <img 
+          src={logoImage} 
+          alt="REDGO AI Logo" 
+          className="w-full h-full object-cover"
+        />
       </div>
       
       <h1 className="text-4xl font-bold text-gray-900 mb-4 text-center bg-gradient-to-r from-gray-900 to-gray-700 bg-clip-text text-transparent">
@@ -50,9 +54,9 @@ export function ChatWelcome({ onPromptClick }: ChatWelcomeProps) {
           <button
             key={index}
             onClick={() => onPromptClick(item.prompt)}
-            className="p-5 text-left bg-white border-2 border-gray-100 rounded-2xl hover:border-amber-400 hover:shadow-lg hover:shadow-amber-100 transition-all duration-200 group"
+            className="p-5 text-left bg-white border-2 border-gray-100 rounded-2xl hover:border-red-400 hover:shadow-lg hover:shadow-red-100 transition-all duration-200 group"
           >
-            <div className="text-base font-semibold text-gray-900 mb-2 group-hover:text-amber-600 transition-colors">
+            <div className="text-base font-semibold text-gray-900 mb-2 group-hover:text-red-600 transition-colors">
               {item.title}
             </div>
             <div className="text-sm text-gray-600">{item.description}</div>

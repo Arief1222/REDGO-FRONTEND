@@ -28,6 +28,12 @@ export const PERMISSIONS = {
   CHAT_EDIT: 'chat.update',
   CHAT_DELETE: 'chat.delete',
 
+  // Prompt permissions
+  PROMPT_VIEW: 'prompts.read',
+  PROMPT_CREATE: 'prompts.create',
+  PROMPT_EDIT: 'prompts.update',
+  //PROMPT_DELETE: 'prompts.delete',
+
   // // Item permissions
   // ITEMS_VIEW: 'items.read',
   // ITEMS_CREATE: 'items.create',

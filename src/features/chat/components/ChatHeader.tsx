@@ -1,5 +1,6 @@
-import { Menu, Sparkles } from "lucide-react";
+import { Menu } from "lucide-react";
 import type { Mode } from "@/app/api/chat";
+import logoImage from "@/assets/images/logos/pp.jpeg";
 
 type Props = {
   mode: Mode;
@@ -17,9 +18,11 @@ export default function ChatHeader({ mode, onToggleSidebar }: Props) {
           <Menu className="w-5 h-5 text-gray-600" />
         </button>
         <div className="flex items-center gap-3">
-          <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-lg flex items-center justify-center">
-            <Sparkles className="w-5 h-5 text-white" />
-          </div>
+          <img 
+            src={logoImage} 
+            alt="REDGO AI Logo" 
+            className="w-8 h-8 rounded-lg"
+          />
           <span className="font-bold text-lg text-gray-900 hidden sm:block">
             REDGO AI
           </span>
@@ -27,7 +30,7 @@ export default function ChatHeader({ mode, onToggleSidebar }: Props) {
       </div>
 
       <div className="flex items-center gap-3">
-        <span className="text-xs font-semibold bg-gradient-to-r from-amber-100 to-orange-100 text-amber-700 px-4 py-2 rounded-full border border-amber-200">
+        <span className="text-xs font-semibold bg-gradient-to-r from-red-100 to-red-50 text-red-700 px-4 py-2 rounded-full border border-red-200">
           {mode.charAt(0).toUpperCase() + mode.slice(1)}
         </span>
       </div>

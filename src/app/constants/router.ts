@@ -22,6 +22,7 @@ export const ROUTES = {
   ROLES: '/roles',
   RAG:'/rag',
   CHAT:'/chat',
+  PROMPTS: '/prompts',
  
   
 
