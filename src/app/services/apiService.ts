@@ -39,6 +39,13 @@ class ApiService {
         if (token) {
           config.headers.Authorization = `Bearer ${token}`;
         }
+
+        // ✅ TAMBAH: Auto-detect FormData dan hapus Content-Type
+        // Axios akan auto-set Content-Type dengan boundary yang benar
+        if (config.data instanceof FormData) {
+          delete config.headers['Content-Type'];
+        }
+
         return config;
       },
       (error) => Promise.reject(error),

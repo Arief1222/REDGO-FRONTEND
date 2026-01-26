@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { chatApi } from './chatApi';
-import type { SendMessageRequest } from './type';
+import type { SendMessageRequest, SaveDiagnosticRequest } from './type';
 
 export const useChatHistory = (params?: { limit?: number; page?: number }) =>
   useQuery({
@@ -30,7 +30,6 @@ export const useSendMessage = () => {
       return res.data;
     },
     onSuccess: () => {
-      // Invalidate chat history to refresh
       queryClient.invalidateQueries({ queryKey: ['chat-history'] });
     },
   });
@@ -56,6 +55,21 @@ export const useClearAllSessions = () => {
   return useMutation({
     mutationFn: async () => {
       const res = await chatApi.clearAllSessions();
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chat-history'] });
+    },
+  });
+};
+
+// ➕ TAMBAH: Hook untuk save diagnostic
+export const useSaveDiagnostic = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: SaveDiagnosticRequest) => {
+      const res = await chatApi.saveDiagnostic(payload);
       return res.data;
     },
     onSuccess: () => {

@@ -70,8 +70,9 @@ export const RagForm: React.FC<RagFormProps> = ({
                 type="file"
                 accept=".txt,.pdf,.docx"
                 disabled={isSubmitting}
-                onChange={(e) => form.setValue('file', e.target.files as any)}
+                {...form.register('file')}
               />
+
             </Box>
 
             {isSubmitting && (

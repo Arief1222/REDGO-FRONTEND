@@ -17,7 +17,8 @@ export default function ChatSidebar({
   onClose,
 }: Props) {
   const modes = [
-    { id: "default" as Mode, name: "Default", desc: "Mode standar" },
+    { id: "diagnostic" as Mode, name: "🔍 Find Problem", desc: "Temukan masalah bisnis" },
+    { id: "discuss" as Mode, name: "💬 Discuss", desc: "Diskusi masalah langsung" },
     { id: "advisor" as Mode, name: "Advisor", desc: "Konsultan bisnis" },
     { id: "explorer" as Mode, name: "Explorer", desc: "Eksplorasi ide" },
   ];

@@ -1,4 +1,4 @@
-export type Mode = 'default' | 'advisor' | 'explorer';
+export type Mode = 'advisor' | 'explorer' | 'diagnostic' | 'discuss';
 
 export type ChatMessage = {
   id: string;
@@ -30,4 +30,32 @@ export type SendMessageResponse = {
 export type ChatHistoryResponse = {
   sessions: ChatSession[];
   total: number;
+};
+
+// ➕ TAMBAH: Types untuk diagnostic
+export type DiagnosticData = {
+  businessStage?: string;
+  teamSize?: string;
+  position?: string;
+  challenges?: string[];
+  situation?: string;
+  perceivedProblem?: string;
+  confidence?: string;
+};
+
+export type SaveDiagnosticRequest = {
+  session_id: string;
+  business_stage: string;
+  team_size: string;
+  position: string;
+  challenges: string[];
+  situation: string;
+  perceived_problem: string;
+  confidence: string;
+};
+
+export type SaveDiagnosticResponse = {
+  session_id: string;
+  status: string;
+  message: string;
 };

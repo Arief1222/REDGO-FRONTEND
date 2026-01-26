@@ -3,7 +3,9 @@ import type {
   SendMessageRequest, 
   SendMessageResponse, 
   ChatHistoryResponse,
-  ChatSession 
+  ChatSession,
+  SaveDiagnosticRequest,
+  SaveDiagnosticResponse
 } from './type';
 
 export const chatApi = {
@@ -21,4 +23,11 @@ export const chatApi = {
 
   clearAllSessions: () =>
     apiService.delete('/core/v1/chat/sessions'),
+  
+  analyzeDiagnostic: (payload: SaveDiagnosticRequest) =>
+    apiService.post<{ analysis: string }>('/core/v1/diagnostic/analyze', payload),
+
+  // ✅ PASTIKAN path ini: /core/v1/diagnostic/save
+  saveDiagnostic: (payload: SaveDiagnosticRequest) =>
+    apiService.post<SaveDiagnosticResponse>('/core/v1/diagnostic/save', payload),
 };
