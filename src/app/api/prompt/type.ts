@@ -1,4 +1,4 @@
-export type Mode = 'default' | 'advisor' | 'explorer';
+export type Mode = 'default' | 'engine' | 'explorer';
 
 export type ChatPrompt = {
   id: number;

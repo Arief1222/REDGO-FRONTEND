@@ -18,7 +18,7 @@ export const PromptTable: React.FC<PromptTableProps> = ({ prompts, isLoading, on
         <Chip
           label={row.mode.toUpperCase()}
           color={
-            row.mode === 'advisor' ? 'primary' : row.mode === 'explorer' ? 'secondary' : 'default'
+            row.mode === 'engine' ? 'primary' : row.mode === 'explorer' ? 'secondary' : 'default'
           }
           size="small"
         />

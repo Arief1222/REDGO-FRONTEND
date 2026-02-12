@@ -2,6 +2,7 @@ import { User } from "lucide-react";
 import type { ChatMessage } from "@/app/api/chat";
 import type { RefObject } from "react";
 import logoImage from "@/assets/images/logos/pp.jpeg";
+import ChatAttachment from "./ChatAttachment";
 
 type Props = {
   messages: ChatMessage[];
@@ -9,85 +10,171 @@ type Props = {
   endRef: RefObject<HTMLDivElement>;
 };
 
-// Utility function untuk format response AI
+// ✅ IMPROVED: Better AI response formatter
 function formatAIResponse(text: string) {
-  const parts = text.split(/(\d+\.\s\*\*[^*]+\*\*)/g);
-  
-  return parts.map((part, index) => {
-    // Check if it's a numbered heading
-    if (/^\d+\.\s\*\*/.test(part)) {
-      const match = part.match(/^(\d+)\.\s\*\*([^*]+)\*\*/);
-      if (match) {
-        return (
-          <div key={index} className="mt-4 mb-2">
-            <h3 className="font-semibold text-gray-900 text-base">
-              {match[1]}. {match[2]}
-            </h3>
-          </div>
+  const lines = text.split('\n');
+  const elements: JSX.Element[] = [];
+  let listItems: JSX.Element[] = [];
+  let listType: 'bullet' | 'number' | null = null;
+  let currentListStartNumber = 1; // ✅ Track actual list number
+
+  const flushList = () => {
+    if (listItems.length > 0) {
+      if (listType === 'number') {
+        elements.push(
+          <ol 
+            key={`list-${elements.length}`} 
+            start={currentListStartNumber} // ✅ Use actual start number
+            className="list-decimal list-inside space-y-2 my-4 ml-4"
+          >
+            {listItems}
+          </ol>
+        );
+      } else {
+        elements.push(
+          <ul key={`list-${elements.length}`} className="list-disc list-inside space-y-2 my-4 ml-4">
+            {listItems}
+          </ul>
         );
       }
+      listItems = [];
+      listType = null;
+      currentListStartNumber = 1;
     }
+  };
+
+  const processInlineFormatting = (line: string) => {
+    // Remove any hashtags (headers)
+    line = line.replace(/^#+\s*/g, '');
     
-    // Process regular text with bold and bullets
-    const processedText = part
-      .split('\n')
-      .map((line, lineIndex) => {
-        line = line.trim();
-        if (!line) return null;
-        
-        // Handle bullet points
-        if (line.startsWith('- ')) {
-          const content = line.substring(2);
-          const cleanContent = content.replace(/\*\*/g, '');
-          return (
-            <li key={lineIndex} className="ml-4 mb-1.5 text-gray-700 leading-relaxed">
-              {cleanContent}
-            </li>
-          );
-        }
-        
-        // Handle bold text in regular paragraphs
-        const boldRegex = /\*\*([^*]+)\*\*/g;
-        if (boldRegex.test(line)) {
-          const segments = [];
-          let lastIndex = 0;
-          let match;
-          const regex = /\*\*([^*]+)\*\*/g;
-          
-          while ((match = regex.exec(line)) !== null) {
-            if (match.index > lastIndex) {
-              segments.push(line.substring(lastIndex, match.index));
-            }
-            segments.push(
-              <strong key={match.index} className="font-semibold text-gray-900">
-                {match[1]}
-              </strong>
-            );
-            lastIndex = regex.lastIndex;
-          }
-          
-          if (lastIndex < line.length) {
-            segments.push(line.substring(lastIndex));
-          }
-          
-          return (
-            <p key={lineIndex} className="mb-2 text-gray-700 leading-relaxed">
-              {segments}
-            </p>
-          );
-        }
-        
-        // Regular paragraph
-        return (
-          <p key={lineIndex} className="mb-2 text-gray-700 leading-relaxed">
-            {line}
-          </p>
+    const segments: (string | JSX.Element)[] = [];
+    let lastIndex = 0;
+    
+    const patterns = [
+      { regex: /\*\*(.+?)\*\*/g, tag: 'bold' },
+      { regex: /__(.+?)__/g, tag: 'underline' },
+      { regex: /_(.+?)_/g, tag: 'italic' },
+    ];
+
+    const matches: Array<{ index: number; length: number; text: string; tag: string }> = [];
+    
+    patterns.forEach(({ regex, tag }) => {
+      let match;
+      const r = new RegExp(regex);
+      while ((match = r.exec(line)) !== null) {
+        matches.push({
+          index: match.index,
+          length: match[0].length,
+          text: match[1],
+          tag,
+        });
+      }
+    });
+
+    matches.sort((a, b) => a.index - b.index);
+
+    matches.forEach((match, i) => {
+      if (match.index > lastIndex) {
+        segments.push(line.substring(lastIndex, match.index));
+      }
+
+      const key = `fmt-${i}`;
+      if (match.tag === 'bold') {
+        segments.push(
+          <strong key={key} className="font-bold text-gray-900">
+            {match.text}
+          </strong>
         );
-      })
-      .filter(Boolean);
+      } else if (match.tag === 'underline') {
+        segments.push(
+          <span key={key} className="underline font-semibold text-red-700">
+            {match.text}
+          </span>
+        );
+      } else if (match.tag === 'italic') {
+        segments.push(
+          <em key={key} className="italic text-gray-700">
+            {match.text}
+          </em>
+        );
+      }
+
+      lastIndex = match.index + match.length;
+    });
+
+    if (lastIndex < line.length) {
+      segments.push(line.substring(lastIndex));
+    }
+
+    return segments.length > 0 ? segments : line;
+  };
+
+  lines.forEach((line, idx) => {
+    line = line.trim();
     
-    return <div key={index}>{processedText}</div>;
+    if (!line) {
+      flushList();
+      return;
+    }
+
+    // Remove hashtag headers
+    if (line.match(/^#+\s+/)) {
+      flushList();
+      const cleanLine = line.replace(/^#+\s+/, '');
+      elements.push(
+        <h3 key={`h-${idx}`} className="font-bold text-lg text-gray-900 mt-6 mb-3">
+          {processInlineFormatting(cleanLine)}
+        </h3>
+      );
+      return;
+    }
+
+    // ✅ FIXED: Better numbered list detection
+    const numberedMatch = line.match(/^(\d+)\.\s+(.+)/);
+    if (numberedMatch) {
+      const lineNumber = parseInt(numberedMatch[1], 10);
+      
+      // Check if this starts a new list
+      if (listType !== 'number' || lineNumber === 1) {
+        flushList();
+        listType = 'number';
+        currentListStartNumber = lineNumber;
+      }
+      
+      listItems.push(
+        <li key={`li-${idx}`} className="text-gray-700 leading-relaxed">
+          {processInlineFormatting(numberedMatch[2])}
+        </li>
+      );
+      return;
+    }
+
+    // Bullet list
+    const bulletMatch = line.match(/^[-•]\s+(.+)/);
+    if (bulletMatch) {
+      if (listType !== 'bullet') {
+        flushList();
+        listType = 'bullet';
+      }
+      listItems.push(
+        <li key={`li-${idx}`} className="text-gray-700 leading-relaxed">
+          {processInlineFormatting(bulletMatch[1])}
+        </li>
+      );
+      return;
+    }
+
+    // Regular paragraph
+    flushList();
+    elements.push(
+      <p key={`p-${idx}`} className="text-gray-700 leading-relaxed mb-3">
+        {processInlineFormatting(line)}
+      </p>
+    );
   });
+
+  flushList();
+  return elements;
 }
 
 export default function ChatMessages({ messages, loading, endRef }: Props) {
@@ -104,9 +191,9 @@ export default function ChatMessages({ messages, loading, endRef }: Props) {
               }`}
             >
               {m.role === "assistant" ? (
-                <img 
-                  src={logoImage} 
-                  alt="REDGO AI" 
+                <img
+                  src={logoImage}
+                  alt="REDGO AI"
                   className="w-full h-full object-cover"
                 />
               ) : (
@@ -121,6 +208,12 @@ export default function ChatMessages({ messages, loading, endRef }: Props) {
                     : "bg-gradient-to-br from-gray-100 to-gray-50"
                 }`}
               >
+                {m.attachment && (
+                  <div className="mb-3">
+                    <ChatAttachment attachment={m.attachment} />
+                  </div>
+                )}
+
                 {m.role === "assistant" ? (
                   <div className="prose prose-sm max-w-none">
                     {formatAIResponse(m.content)}
@@ -136,9 +229,9 @@ export default function ChatMessages({ messages, loading, endRef }: Props) {
         {loading && (
           <div className="flex gap-4 items-start">
             <div className="flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden shadow-md">
-              <img 
-                src="https://i.ibb.co.com/F4k8gkg/design-without-title-17.png" 
-                alt="REDGO AI" 
+              <img
+                src={logoImage}
+                alt="REDGO AI"
                 className="w-full h-full object-cover"
               />
             </div>
@@ -162,7 +255,7 @@ export default function ChatMessages({ messages, loading, endRef }: Props) {
             </div>
           </div>
         )}
-        
+
         <div ref={endRef} />
       </div>
     </div>

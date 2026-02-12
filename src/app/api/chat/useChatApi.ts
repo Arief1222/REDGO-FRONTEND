@@ -1,14 +1,32 @@
+// src/app/api/chat/useChatApi.ts - UPDATED VERSION
+
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { chatApi } from './chatApi';
-import type { SendMessageRequest, SaveDiagnosticRequest } from './type';
+import type {
+  SendMessageRequest,
+  SaveDiagnosticRequest,
+  SaveEngineAnswersRequest,
+  GenerateEngineAnalysisRequest,
+} from './type';
 
-export const useChatHistory = (params?: { limit?: number; page?: number }) =>
+// ===== Chat Queries =====
+export const useChatHistory = (params?: { limit?: number }) =>
   useQuery({
     queryKey: ['chat-history', params],
     queryFn: async () => {
       const res = await chatApi.getChatHistory(params);
       return res.data;
     },
+  });
+
+export const useSessionMessages = (sessionId: string, enabled: boolean = true) =>
+  useQuery({
+    queryKey: ['session-messages', sessionId],
+    queryFn: async () => {
+      const res = await chatApi.getSessionMessages(sessionId);
+      return res.data;
+    },
+    enabled: enabled && !!sessionId,
   });
 
 export const useChatSession = (sessionId: string) =>
@@ -21,6 +39,7 @@ export const useChatSession = (sessionId: string) =>
     enabled: !!sessionId,
   });
 
+// ===== Chat Mutations =====
 export const useSendMessage = () => {
   const queryClient = useQueryClient();
 
@@ -49,21 +68,7 @@ export const useDeleteSession = () => {
   });
 };
 
-export const useClearAllSessions = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: async () => {
-      const res = await chatApi.clearAllSessions();
-      return res.data;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['chat-history'] });
-    },
-  });
-};
-
-// ➕ TAMBAH: Hook untuk save diagnostic
+// ===== Diagnostic =====
 export const useSaveDiagnostic = () => {
   const queryClient = useQueryClient();
 
@@ -77,3 +82,47 @@ export const useSaveDiagnostic = () => {
     },
   });
 };
+
+// ✅ NEW: Engine Mode Hooks
+export const useEngineTopics = () =>
+  useQuery({
+    queryKey: ['engine-topics'],
+    queryFn: async () => {
+      const res = await chatApi.getEngineTopics();
+      return res.data;
+    },
+    staleTime: 1000 * 60 * 60, // 1 hour - topics rarely change
+  });
+
+export const useEngineQuestions = (topic: string, subMode: string, enabled: boolean = true) =>
+  useQuery({
+    queryKey: ['engine-questions', topic, subMode],
+    queryFn: async () => {
+      const res = await chatApi.getEngineQuestions(topic, subMode);
+      return res.data;
+    },
+    enabled: enabled && !!topic && !!subMode,
+    staleTime: 1000 * 60 * 60, // 1 hour
+  });
+
+export const useSaveEngineAnswers = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (payload: SaveEngineAnswersRequest) => {
+      const res = await chatApi.saveEngineAnswers(payload);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chat-history'] });
+    },
+  });
+};
+
+export const useGenerateEngineAnalysis = () =>
+  useMutation({
+    mutationFn: async (payload: GenerateEngineAnalysisRequest) => {
+      const res = await chatApi.generateEngineAnalysis(payload);
+      return res.data;
+    },
+  });
