@@ -16,9 +16,9 @@ interface Props {
 
 export default function EngineQuestionnaire({
   questions,
-  expectedOutputs,
   title,
   description,
+  expectedOutputs,
   onSubmit,
   onBack,
   isSubmitting,
@@ -101,6 +101,11 @@ export default function EngineQuestionnaire({
             <h3 className="text-lg font-semibold text-gray-900">
               {currentQuestion.question}
             </h3>
+            {currentQuestion.hint && (
+              <p className="text-sm text-gray-400 mt-1">
+                {currentQuestion.hint}
+              </p>
+            )}
           </div>
         </div>
 
@@ -117,6 +122,7 @@ export default function EngineQuestionnaire({
         <p className="text-xs text-gray-500 mt-2">
           Tekan Ctrl + Enter untuk lanjut ke pertanyaan berikutnya
         </p>
+
       </div>
 
       {/* Navigation Buttons */}
@@ -161,48 +167,31 @@ export default function EngineQuestionnaire({
       </div>
 
       {/* Questions Overview */}
-<div className="bg-gray-50 rounded-lg p-4 mb-4">
-  <h4 className="font-semibold text-gray-900 mb-3 text-sm">
-    Status Pertanyaan:
-  </h4>
-
-<div className="flex flex-wrap gap-2">
-  {questions.map((q, idx) => (
-    <button
-      key={q.key}
-      onClick={() => setCurrentQuestionIndex(idx)}
-      disabled={isSubmitting}
-      className={`
-        w-9 h-9 rounded-full flex items-center justify-center
-        text-xs font-semibold transition-all
-        ${currentQuestionIndex === idx
-          ? 'bg-red-600 text-white'
-          : answers[q.key]?.trim()
-          ? 'bg-green-100 text-green-700 border border-green-300'
-          : 'bg-white text-gray-600 border border-gray-300'
-        }
-      `}
-    >
-      {idx + 1}
-    </button>
-  ))}
-</div>
-
-</div>
-
-
-
-      {/* Expected Outputs */}
-      <div className="bg-blue-50 rounded-xl p-6 border border-blue-200">
-        <h4 className="font-semibold text-blue-900 mb-3">Output yang Akan Dihasilkan:</h4>
-        <ul className="space-y-2">
-          {expectedOutputs.map((output, idx) => (
-            <li key={idx} className="flex items-start gap-2 text-sm text-blue-800">
-              <div className="w-1.5 h-1.5 bg-blue-600 rounded-full mt-1.5 flex-shrink-0"></div>
-              <span>{output}</span>
-            </li>
+      <div className="bg-gray-50 rounded-lg p-4 mb-4">
+        <h4 className="font-semibold text-gray-900 mb-3 text-sm">
+          Status Pertanyaan:
+        </h4>
+        <div className="flex flex-wrap gap-2">
+          {questions.map((q, idx) => (
+            <button
+              key={q.key}
+              onClick={() => setCurrentQuestionIndex(idx)}
+              disabled={isSubmitting}
+              className={`
+                w-9 h-9 rounded-full flex items-center justify-center
+                text-xs font-semibold transition-all
+                ${currentQuestionIndex === idx
+                  ? 'bg-red-600 text-white'
+                  : answers[q.key]?.trim()
+                  ? 'bg-green-100 text-green-700 border border-green-300'
+                  : 'bg-white text-gray-600 border border-gray-300'
+                }
+              `}
+            >
+              {idx + 1}
+            </button>
           ))}
-        </ul>
+        </div>
       </div>
     </div>
   );

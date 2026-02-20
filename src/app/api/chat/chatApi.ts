@@ -17,6 +17,7 @@ import type {
   GenerateEngineAnalysisRequest,
   GenerateEngineAnalysisResponse,
 } from './type';
+import { update } from 'lodash';
 
 export const chatApi = {
   // ===== Regular Chat =====
@@ -58,6 +59,9 @@ export const chatApi = {
 
   deleteSession: (sessionId: string) =>
     apiService.delete(`/core/v1/chat/sessions/${sessionId}`),
+
+  updateSessionTitle: (sessionId: string, title: string) =>
+    apiService.put(`/core/v1/chat/sessions/${sessionId}/title`, { title }),
 
   getSession: (sessionId: string) =>
     apiService.get<ChatSession>(`/core/v1/chat/sessions/${sessionId}`),

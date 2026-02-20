@@ -9,6 +9,12 @@ interface PromptTableProps {
   onEdit: (row: any) => void;
 }
 
+const MODE_COLOR: Record<string, any> = {
+  engine: 'primary',
+  explorer: 'secondary',
+  discuss: 'default',
+};
+
 export const PromptTable: React.FC<PromptTableProps> = ({ prompts, isLoading, onEdit }) => {
   const columns: VenturoTableColumn<any>[] = [
     {
@@ -17,12 +23,46 @@ export const PromptTable: React.FC<PromptTableProps> = ({ prompts, isLoading, on
       render: (row) => (
         <Chip
           label={row.mode.toUpperCase()}
-          color={
-            row.mode === 'engine' ? 'primary' : row.mode === 'explorer' ? 'secondary' : 'default'
-          }
+          color={MODE_COLOR[row.mode] ?? 'default'}
           size="small"
         />
       ),
+    },
+    // ✅ Kolom baru: Topic
+    {
+      id: 'topic',
+      header: 'Topic',
+      render: (row) =>
+        row.topic ? (
+          <Chip
+            label={row.topic.replace(/_/g, ' ').toUpperCase()}
+            color="info"
+            size="small"
+            variant="outlined"
+          />
+        ) : (
+          <Typography variant="body2" color="textSecondary">
+            —
+          </Typography>
+        ),
+    },
+    // ✅ Kolom baru: Sub Mode
+    {
+      id: 'sub_mode',
+      header: 'Sub Mode',
+      render: (row) =>
+        row.sub_mode ? (
+          <Chip
+            label={row.sub_mode.toUpperCase()}
+            color={row.sub_mode === 'idea' ? 'success' : 'warning'}
+            size="small"
+            variant="outlined"
+          />
+        ) : (
+          <Typography variant="body2" color="textSecondary">
+            —
+          </Typography>
+        ),
     },
     {
       id: 'model',
@@ -40,7 +80,7 @@ export const PromptTable: React.FC<PromptTableProps> = ({ prompts, isLoading, on
         <Typography
           variant="body2"
           sx={{
-            maxWidth: 400,
+            maxWidth: 350,
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             whiteSpace: 'nowrap',

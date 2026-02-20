@@ -8,6 +8,7 @@ import {
   Box,
   Form,
   CircularProgress,
+  Chip,
 } from '@/shared/components/venturo-ui';
 import { useFormEditPrompt } from '../hooks/useFormEditPrompt';
 
@@ -32,7 +33,6 @@ export const PromptEditForm: React.FC<PromptEditFormProps> = ({
     },
   });
 
-  // ✅ biar pas dialog kebuka, value selalu ngikut prompt yg dipilih
   useEffect(() => {
     if (open && prompt) {
       form.reset({
@@ -51,13 +51,44 @@ export const PromptEditForm: React.FC<PromptEditFormProps> = ({
     await onSubmit(data);
   };
 
+  // ✅ Build judul dialog yang informatif
+  const dialogTitle = () => {
+    let title = `Edit Prompt — ${prompt?.mode?.toUpperCase() ?? ''}`;
+    if (prompt?.topic) title += ` / ${prompt.topic.replace(/_/g, ' ').toUpperCase()}`;
+    if (prompt?.sub_mode) title += ` / ${prompt.sub_mode.toUpperCase()}`;
+    return title;
+  };
+
   return (
     <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
-      <DialogTitle>Edit Prompt - {prompt?.mode}</DialogTitle>
+      <DialogTitle>{dialogTitle()}</DialogTitle>
 
       <Form form={form} onSubmit={handleFormSubmit}>
         <DialogContent>
           <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+
+            {/* ✅ Info badges topic & sub_mode (read-only) */}
+            {(prompt?.topic || prompt?.sub_mode) && (
+              <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                {prompt?.topic && (
+                  <Chip
+                    label={`Topic: ${prompt.topic.replace(/_/g, ' ')}`}
+                    color="info"
+                    size="small"
+                    variant="outlined"
+                  />
+                )}
+                {prompt?.sub_mode && (
+                  <Chip
+                    label={`Sub Mode: ${prompt.sub_mode}`}
+                    color={prompt.sub_mode === 'idea' ? 'success' : 'warning'}
+                    size="small"
+                    variant="outlined"
+                  />
+                )}
+              </Box>
+            )}
+
             {/* Model Selector */}
             <Box>
               <label style={{ display: 'block', marginBottom: 8, fontWeight: 500 }}>

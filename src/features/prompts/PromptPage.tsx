@@ -62,7 +62,7 @@ const PromptPage: React.FC = () => {
         <Box sx={{ maxWidth: 320 }}>
           <TextField
             label="Search prompt"
-            placeholder="Search by mode..."
+            placeholder="Search by topic..."  // ← ganti ini
             fullWidth
             value={search}
             onChange={(e: React.ChangeEvent<HTMLInputElement>) => handleSearch(e.target.value)}

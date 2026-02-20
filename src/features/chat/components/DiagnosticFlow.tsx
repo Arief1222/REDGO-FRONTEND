@@ -253,7 +253,7 @@ function LandingPage({ onStart, onSkip }: { onStart: () => void; onSkip: () => v
             className="w-full max-w-md mx-auto flex items-center justify-center gap-3 px-8 py-4 bg-white text-gray-700 rounded-xl hover:bg-gray-50 transition-all border-2 border-gray-200 font-medium"
           >
             <MessageCircle className="w-5 h-5" />
-            Sudah tahu masalahnya? Langsung diskusi
+            Mulai diskuasi 
           </button>
         </div>
 

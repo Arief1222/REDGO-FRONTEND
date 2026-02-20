@@ -121,6 +121,7 @@ export type EngineQuestion = {
   key: string;
   question: string;
   order: number;
+  hint?: string;
 };
 
 export type EngineTopicConfig = {

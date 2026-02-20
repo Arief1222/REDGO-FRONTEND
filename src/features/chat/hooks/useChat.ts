@@ -236,7 +236,7 @@ export function useChat() {
       id: Date.now().toString(),
       role: "assistant",
       content:
-        "Saya sudah memahami situasi Anda. Saya akan berpikir bersama Anda sebagai decision partner. Apa yang ingin kita diskusikan terlebih dahulu?",
+        "Apa yang ingin terlebih dulu kita diskusikan?”",
     };
 
     setMessages([welcomeMessage]);

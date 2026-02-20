@@ -39,4 +39,5 @@ export {
   useEngineQuestions,
   useSaveEngineAnswers,
   useGenerateEngineAnalysis,
+    useUpdateSessionTitle,
 } from './useChatApi';

@@ -18,7 +18,18 @@ export const useChatHistory = (params?: { limit?: number }) =>
       return res.data;
     },
   });
-
+export const useUpdateSessionTitle = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ sessionId, title }: { sessionId: string; title: string }) => {
+      const res = await chatApi.updateSessionTitle(sessionId, title);
+      return res.data;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['chat-history'] });
+    },
+  });
+};
 export const useSessionMessages = (sessionId: string, enabled: boolean = true) =>
   useQuery({
     queryKey: ['session-messages', sessionId],

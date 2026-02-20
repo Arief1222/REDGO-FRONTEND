@@ -29,7 +29,7 @@ export const useTablePrompt = () => {
   const filtered = useMemo(() => {
     if (!search) return data;
     const s = search.toLowerCase();
-    return data.filter((d) => String(d?.mode || '').toLowerCase().includes(s));
+    return data.filter((d) => String(d?.topic || '').toLowerCase().includes(s));
   }, [data, search]);
 
   return {

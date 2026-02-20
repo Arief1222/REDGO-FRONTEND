@@ -37,9 +37,12 @@ export const useFormEditPrompt = ({ prompt, onSuccess }: UseFormEditPromptOption
     }
 
     try {
+      // ✅ Kirim topic dan sub_mode ke API
       await promptApi.update(prompt.mode, {
         system_prompt: data.system_prompt,
         model: data.model,
+        topic: prompt.topic ?? undefined,
+        sub_mode: prompt.sub_mode ?? undefined,
       });
 
       toast.success('Prompt updated successfully');

@@ -5,6 +5,8 @@ export type ChatPrompt = {
   mode: Mode;
   system_prompt: string;
   model: string;
+  topic?: string;        // ✅ NEW: for engine mode
+  sub_mode?: string;     // ✅ NEW: for engine mode
   is_active: boolean;
   created_at: string;
   updated_at: string;
@@ -12,6 +14,8 @@ export type ChatPrompt = {
 
 export type UpdatePromptRequest = {
   system_prompt: string;
+  topic?: string;        // ✅ NEW: for engine mode 
+  sub_mode?: string;     // ✅ NEW: for engine mode
   model: string;
 };
 

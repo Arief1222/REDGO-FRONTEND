@@ -9,9 +9,9 @@ import {
   useEngineQuestions,
   useSaveEngineAnswers,
   useGenerateEngineAnalysis,
-  useSendMessage, // ✅ ADD THIS
+  // useSendMessage, // ✅ ADD THIS
 } from '@/app/api/chat';
-import type { EngineTopic, EngineSubMode, EngineAnswers, ChatMessage } from '@/app/api/chat';
+import type { EngineTopic, EngineSubMode, EngineAnswers} from '@/app/api/chat';
 import { useToast } from '@/shared/hooks/useToast';
 
 type Step = 'topic' | 'submode' | 'questionnaire';
@@ -40,7 +40,7 @@ export default function EngineFlow({ sessionId, onComplete }: Props) {
 
   const saveAnswersMutation = useSaveEngineAnswers();
   const generateAnalysisMutation = useGenerateEngineAnalysis();
-  const sendMessageMutation = useSendMessage(); // ✅ ADD THIS
+  // const sendMessageMutation = useSendMessage(); // ✅ ADD THIS
 
   const handleTopicSelect = (topic: EngineTopic) => {
     setSelectedTopic(topic);
