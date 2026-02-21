@@ -17,7 +17,6 @@ import type {
   GenerateEngineAnalysisRequest,
   GenerateEngineAnalysisResponse,
 } from './type';
-import { update } from 'lodash';
 
 export const chatApi = {
   // ===== Regular Chat =====

@@ -1,14 +1,12 @@
 // src/app/chat/components/EngineFlow.tsx - FIXED: Save analysis to backend
 
 import { useState } from 'react';
-import { useQueryClient } from '@tanstack/react-query';
 import EngineTopicSelector from './EngineTopicSelector';
 import EngineSubModeSelector from './EngineSubModeSelector';
 import EngineQuestionnaire from './EngineQuestionnaire';
 import {
   useEngineQuestions,
   useSaveEngineAnswers,
-  useGenerateEngineAnalysis,
   // useSendMessage, // ✅ ADD THIS
 } from '@/app/api/chat';
 import type { EngineTopic, EngineSubMode, EngineAnswers} from '@/app/api/chat';
@@ -18,12 +16,11 @@ type Step = 'topic' | 'submode' | 'questionnaire';
 
 interface Props {
   sessionId: string;
-  onComplete: (analysis: string, topic: EngineTopic, subMode: EngineSubMode) => void;
+  onComplete: (analysis: string, topic: EngineTopic, subMode: EngineSubMode,   answers: EngineAnswers) => void;
 }
 
 export default function EngineFlow({ sessionId, onComplete }: Props) {
   const toast = useToast();
-  const queryClient = useQueryClient();
   const [step, setStep] = useState<Step>('topic');
   const [selectedTopic, setSelectedTopic] = useState<EngineTopic | null>(null);
   const [selectedSubMode, setSelectedSubMode] = useState<EngineSubMode | null>(null);
@@ -39,7 +36,7 @@ export default function EngineFlow({ sessionId, onComplete }: Props) {
   );
 
   const saveAnswersMutation = useSaveEngineAnswers();
-  const generateAnalysisMutation = useGenerateEngineAnalysis();
+  // const generateAnalysisMutation = useGenerateEngineAnalysis();
   // const sendMessageMutation = useSendMessage(); // ✅ ADD THIS
 
   const handleTopicSelect = (topic: EngineTopic) => {
@@ -63,40 +60,25 @@ export default function EngineFlow({ sessionId, onComplete }: Props) {
     setStep('submode');
   };
 
-  const handleSubmitAnswers = async (answers: EngineAnswers) => {
-    if (!selectedTopic || !selectedSubMode) return;
+const handleSubmitAnswers = async (answers: EngineAnswers) => {
+  if (!selectedTopic || !selectedSubMode) return;
 
-    try {
-      // 1. Save answers to engine_answers table
-      await saveAnswersMutation.mutateAsync({
-        session_id: sessionId,
-        topic: selectedTopic,
-        sub_mode: selectedSubMode,
-        answers,
-      });
+  try {
+    await saveAnswersMutation.mutateAsync({
+      session_id: sessionId,
+      topic: selectedTopic,
+      sub_mode: selectedSubMode,
+      answers,
+    });
 
-      // 2. Generate analysis (backend will save it as message automatically)
-      const analysisResult = await generateAnalysisMutation.mutateAsync({
-        session_id: sessionId,
-        topic: selectedTopic,
-        sub_mode: selectedSubMode,
-      });
+    // ✅ Langsung pindah, TANPA streaming di sini
+   onComplete("", selectedTopic, selectedSubMode, answers); // ✅ pass answers
 
-      console.log("✅ Engine analysis generated and saved by backend");
-
-      // ✅ 3. Invalidate chat history to refresh sidebar
-      queryClient.invalidateQueries({ queryKey: ['chatHistory'] });
-
-      // 4. Complete flow - show in UI
-      onComplete(analysisResult.analysis, selectedTopic, selectedSubMode);
-      
-      toast.success('Analysis berhasil dibuat!');
-    } catch (error) {
-      console.error('Failed to submit answers:', error);
-      toast.error('Gagal membuat analysis. Silakan coba lagi.');
-    }
-  };
-
+  } catch (error) {
+    console.error('Failed to submit answers:', error);
+    toast.error('Gagal membuat analysis. Silakan coba lagi.');
+  }
+};
   // Show loading when fetching questions
   if (step === 'questionnaire' && isLoadingQuestions) {
     return (
@@ -131,7 +113,7 @@ export default function EngineFlow({ sessionId, onComplete }: Props) {
           description={questionsData.description}
           onSubmit={handleSubmitAnswers}
           onBack={handleBackToSubMode}
-          isSubmitting={saveAnswersMutation.isPending || generateAnalysisMutation.isPending}
+          isSubmitting={saveAnswersMutation.isPending}
         />
       )}
     </div>

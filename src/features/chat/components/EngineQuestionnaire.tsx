@@ -18,7 +18,6 @@ export default function EngineQuestionnaire({
   questions,
   title,
   description,
-  expectedOutputs,
   onSubmit,
   onBack,
   isSubmitting,

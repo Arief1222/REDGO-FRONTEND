@@ -145,6 +145,7 @@ function formatAIResponse(text: string) {
 
   lines.forEach((line, idx) => {
     line = line.trim();
+  if (line === '---' || line === '***' || line === '___') return;
 
     if (!line) {
       flushList();

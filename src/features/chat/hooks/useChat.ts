@@ -2,13 +2,14 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSendMessage, useSaveDiagnostic, chatApi } from "@/app/api/chat";
-import type { 
-  Mode, 
-  ChatMessage, 
-  DiagnosticData, 
+import { storageService } from '@/app/services/storageService';
+import type {
+  Mode,
+  ChatMessage,
+  DiagnosticData,
   BackendChatMessage,
   EngineTopic,
-  EngineSubMode 
+  EngineSubMode
 } from "@/app/api/chat";
 import { useVoiceRecorder } from './useVoiceRecorder';
 import { useToast } from "@/shared/hooks/useToast";
@@ -40,6 +41,7 @@ export function useChat() {
   // ===== REFS =====
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const sessionIdRef = useRef(sessionId);
 
   // ===== MUTATIONS =====
   const sendMessageMutation = useSendMessage();
@@ -52,7 +54,9 @@ export function useChat() {
       setSessionId(crypto.randomUUID());
     }
   }, [sessionId]);
-
+  useEffect(() => {
+    sessionIdRef.current = sessionId;
+  }, [sessionId]);
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -158,28 +162,82 @@ export function useChat() {
     setInput("");
     setLoading(true);
 
+    // ✅ Placeholder assistant message untuk streaming
+    const assistantId = `${Date.now()}-assistant`;
+    setMessages((prev) => [...prev, {
+      id: assistantId,
+      role: "assistant" as const,
+      content: "",
+    }]);
+
     try {
-      const res = await sendMessageMutation.mutateAsync({
-        session_id: sessionId,
-        mode,
-        topic: engineTopic || undefined,
-        sub_mode: engineSubMode || undefined,
-        message: content,
-        attachment_id: attachedFile?.id,
-      });
+      // ✅ Ambil token dari storage
+      const token = storageService.get<string>('token') || '';
 
-      const assistantMessage: ChatMessage = {
-        id: `${Date.now()}-assistant`,
-        role: "assistant",
-        content: res.reply,
-      };
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/core/v1/chat/stream`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          body: JSON.stringify({
+            session_id: sessionId,
+            mode,
+            topic: engineTopic || undefined,
+            sub_mode: engineSubMode || undefined,
+            message: content,
+            attachment_id: attachedFile?.id,
+          }),
+        }
+      );
 
-      setMessages((prev) => [...prev, assistantMessage]);
+      if (!response.ok) {
+        throw new Error(`HTTP error: ${response.status}`);
+      }
+
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let fullReply = "";
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? ""; // simpan sisa yang belum lengkap
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const data = line.slice(6).trim();
+            if (data === "[DONE]" || data === "[ERROR]") continue;
+            if (data) {
+              try {
+                const parsed = JSON.parse(data);
+                fullReply += parsed;
+              } catch {
+                fullReply += data; // fallback kalau bukan JSON
+              }
+              setMessages((prev) => prev.map((msg) =>
+                msg.id === assistantId
+                  ? { ...msg, content: fullReply }
+                  : msg
+              ));
+            }
+          }
+        }
+      }
+
       setAttachedFile(null);
 
     } catch (error) {
-      console.error("Failed to send message:", error);
-      setMessages((prev) => prev.filter((msg) => msg.id !== userMessage.id));
+      console.error("Stream error:", error);
+      setMessages((prev) => prev.filter(
+        (m) => m.id !== userMessage.id && m.id !== assistantId
+      ));
       setInput(content);
       toast.error("Gagal mengirim pesan. Silakan coba lagi.");
     } finally {
@@ -193,7 +251,7 @@ export function useChat() {
     setSessionId(crypto.randomUUID());
     setDiagnosticData(null);
     setAttachedFile(null);
-    
+
     // Clear mode-specific states for fresh start
     setEngineTopic(null);
     setEngineSubMode(null);
@@ -236,40 +294,92 @@ export function useChat() {
       id: Date.now().toString(),
       role: "assistant",
       content:
-        "Apa yang ingin terlebih dulu kita diskusikan?”",
+        "Apa yang ingin terlebih dulu kita diskusikan?",
     };
 
     setMessages([welcomeMessage]);
   };
 
   // ✅ Handle Engine flow completion - load messages from backend
-  const handleEngineComplete = async (analysis: string, topic: EngineTopic, subMode: EngineSubMode) => {
-    console.log("⚙️ Engine analysis completed:", { topic, subMode });
-    
-    // Set engine states
-    setEngineTopic(topic);
-    setEngineSubMode(subMode);
+const handleEngineComplete = async (
+  analysis: string,
+  topic: EngineTopic,
+  subMode: EngineSubMode,
+  answers: Record<string, string>
+) => {
+  const currentSessionId = sessionIdRef.current; // ✅ capture dulu sebelum apapun
+  console.log("✅ sessionId yang dipakai:", currentSessionId);
 
-    // ✅ Load messages from backend to show the analysis
-    // Backend already saved the analysis, so we just fetch it
-    try {
-      setLoading(true);
-      await loadChatSession(sessionId);
+  setEngineTopic(topic);
+  setEngineSubMode(subMode);
+  setMode("engine");
+
+  const assistantId = `${Date.now()}-assistant`;
+  setMessages([{
+    id: assistantId,
+    role: "assistant" as const,
+    content: "",
+  }]);
+
+  setLoading(true);
+
+  try {
+    const token = storageService.get<string>('token') || '';
+    const response = await fetch(
+      `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/core/v1/engine/analyze/stream`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          session_id: currentSessionId, // ✅ pakai captured value
+          topic,
+          sub_mode: subMode,
+        }),
+      }
+    );
+
+      if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
+
+      const reader = response.body!.getReader();
+      const decoder = new TextDecoder();
+      let fullReply = "";
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split("\n");
+        buffer = lines.pop() ?? "";
+
+        for (const line of lines) {
+          if (line.startsWith("data: ")) {
+            const data = line.slice(6).trim();
+            if (data === "[DONE]" || data === "[ERROR]") continue;
+            if (data) {
+              try { fullReply += JSON.parse(data); }
+              catch { fullReply += data; }
+
+              setMessages((prev) => prev.map((msg) =>
+                msg.id === assistantId
+                  ? { ...msg, content: fullReply }
+                  : msg
+              ));
+            }
+          }
+        }
+      }
     } catch (error) {
-      console.error("Failed to load messages:", error);
-      
-      // Fallback: show analysis in UI even if load fails
-      const analysisMessage: ChatMessage = {
-        id: `${Date.now()}-assistant`,
-        role: "assistant",
-        content: analysis,
-      };
-      setMessages([analysisMessage]);
+      console.error("Stream error:", error);
+      toast.error("Gagal membuat analysis.");
     } finally {
       setLoading(false);
     }
   };
-
   // ✅ loadChatSession with Engine mode support
   const loadChatSession = async (targetSessionId: string) => {
     try {
@@ -290,13 +400,13 @@ export function useChat() {
 
       // ✅ Get mode, topic, and sub_mode from last message
       const lastBackendMsg = res.data.messages[res.data.messages.length - 1];
-      
+
       if (
         lastBackendMsg?.Mode &&
         ["diagnostic", "discuss", "engine", "explorer"].includes(lastBackendMsg.Mode)
       ) {
         setMode(lastBackendMsg.Mode as Mode);
-        
+
         // ✅ Set Engine mode states if available
         if (lastBackendMsg.Mode === 'engine') {
           if (lastBackendMsg.Topic) {

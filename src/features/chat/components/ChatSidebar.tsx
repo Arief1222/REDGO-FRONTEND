@@ -3,8 +3,8 @@ import { Plus, ChevronDown, Trash2, Loader2, MoreHorizontal, Pencil } from "luci
 import type { Mode } from "@/app/api/chat";
 import { useState, useEffect } from "react";
 import { useChatHistory, useDeleteSession, useUpdateSessionTitle } from "@/app/api/chat";
-import { formatDistanceToNow } from "date-fns";
-import { id as idLocale } from "date-fns/locale";
+// import { formatDistanceToNow } from "date-fns";
+// import { id as idLocale } from "date-fns/locale";
 import { useToast } from "@/shared/hooks/useToast";
 
 type Props = {
@@ -97,16 +97,16 @@ export default function ChatSidebar({
     }
   };
 
-  const formatTimestamp = (timestamp: string) => {
-    try {
-      return formatDistanceToNow(new Date(timestamp), {
-        addSuffix: true,
-        locale: idLocale,
-      });
-    } catch {
-      return timestamp;
-    }
-  };
+  // const formatTimestamp = (timestamp: string) => {
+  //   try {
+  //     return formatDistanceToNow(new Date(timestamp), {
+  //       addSuffix: true,
+  //       locale: idLocale,
+  //     });
+  //   } catch {
+  //     return timestamp;
+  //   }
+  // };
 
   const getSessionTitle = (session: any) => {
     if (session.title) return session.title;
