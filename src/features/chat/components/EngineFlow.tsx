@@ -9,14 +9,14 @@ import {
   useSaveEngineAnswers,
   // useSendMessage, // ✅ ADD THIS
 } from '@/app/api/chat';
-import type { EngineTopic, EngineSubMode, EngineAnswers} from '@/app/api/chat';
+import type { EngineTopic, EngineSubMode, EngineAnswers } from '@/app/api/chat';
 import { useToast } from '@/shared/hooks/useToast';
 
 type Step = 'topic' | 'submode' | 'questionnaire';
 
 interface Props {
   sessionId: string;
-  onComplete: (analysis: string, topic: EngineTopic, subMode: EngineSubMode,   answers: EngineAnswers) => void;
+  onComplete: (analysis: string, topic: EngineTopic, subMode: EngineSubMode, answers: EngineAnswers) => void;
 }
 
 export default function EngineFlow({ sessionId, onComplete }: Props) {
@@ -60,25 +60,25 @@ export default function EngineFlow({ sessionId, onComplete }: Props) {
     setStep('submode');
   };
 
-const handleSubmitAnswers = async (answers: EngineAnswers) => {
-  if (!selectedTopic || !selectedSubMode) return;
+  const handleSubmitAnswers = async (answers: EngineAnswers) => {
+    if (!selectedTopic || !selectedSubMode) return;
 
-  try {
-    await saveAnswersMutation.mutateAsync({
-      session_id: sessionId,
-      topic: selectedTopic,
-      sub_mode: selectedSubMode,
-      answers,
-    });
+    try {
+      await saveAnswersMutation.mutateAsync({
+        session_id: sessionId,
+        topic: selectedTopic,
+        sub_mode: selectedSubMode,
+        answers,
+      });
 
-    // ✅ Langsung pindah, TANPA streaming di sini
-   onComplete("", selectedTopic, selectedSubMode, answers); // ✅ pass answers
+      // ✅ Langsung pindah, TANPA streaming di sini
+      onComplete("", selectedTopic, selectedSubMode, answers); // ✅ pass answers
 
-  } catch (error) {
-    console.error('Failed to submit answers:', error);
-    toast.error('Gagal membuat analysis. Silakan coba lagi.');
-  }
-};
+    } catch (error) {
+      console.error('Failed to submit answers:', error);
+      toast.error('Gagal membuat analysis. Silakan coba lagi.');
+    }
+  };
   // Show loading when fetching questions
   if (step === 'questionnaire' && isLoadingQuestions) {
     return (
@@ -98,8 +98,9 @@ const handleSubmitAnswers = async (answers: EngineAnswers) => {
         <EngineTopicSelector onTopicSelect={handleTopicSelect} />
       )}
 
-      {step === 'submode' && (
+      {step === 'submode' && selectedTopic && (
         <EngineSubModeSelector
+          selectedTopic={selectedTopic}
           onSubModeSelect={handleSubModeSelect}
           onBack={handleBackToTopics}
         />

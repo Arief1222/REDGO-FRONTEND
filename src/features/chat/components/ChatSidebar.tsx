@@ -39,8 +39,8 @@ export default function ChatSidebar({
   const deleteSessionMutation = useDeleteSession();
 
   const modes = [
-    { id: "diagnostic" as Mode, name: "🔍 Find Problem", desc: "Temukan masalah bisnis" },
-    { id: "engine" as Mode, name: "⚙️ Engine", desc: "Panduan terstruktur" },
+    { id: "diagnostic" as Mode, name: "Probe", desc: "Temukan masalah bisnis" },
+    { id: "engine" as Mode, name: "Thrive", desc: "Panduan terstruktur" },
   ];
 
   const currentMode = modes.find((m) => m.id === mode);
