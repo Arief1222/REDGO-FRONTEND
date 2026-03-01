@@ -257,7 +257,11 @@ export function useChat() {
     setEngineSubMode(null);
   };
 
-  const handleDiagnosticComplete = async (data: DiagnosticData) => {
+  const handleDiagnosticComplete = async (
+  data: DiagnosticData,
+  choice: 'explore' | 'skip',
+  arahan: string
+) => {
     console.log("📊 Diagnostic completed:", data);
     setDiagnosticData(data);
 
@@ -289,15 +293,19 @@ export function useChat() {
     }
 
     setMode("discuss");
+    
 
-    const welcomeMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: "assistant",
-      content:
-        "Apa yang ingin terlebih dulu kita diskusikan?",
-    };
+    // const welcomeMessage: ChatMessage = {
+    //   id: Date.now().toString(),
+    //   role: "assistant",
+    //   content:
+    //     "Apa yang ingin terlebih dulu kita diskusikan?",
+    // };
 
-    setMessages([welcomeMessage]);
+    // setMessages([welcomeMessage]);
+     if (choice === 'explore' && arahan) {
+    await sendMessage(arahan);
+  }
   };
 
   // ✅ Handle Engine flow completion - load messages from backend

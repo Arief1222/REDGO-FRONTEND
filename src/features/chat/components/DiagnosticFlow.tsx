@@ -4,7 +4,7 @@ import type { DiagnosticData } from '@/app/api/chat';
 import { chatApi } from '@/app/api/chat';
 
 type DiagnosticFlowProps = {
-  onComplete: (data: DiagnosticData) => void;
+  onComplete: (data: DiagnosticData, choice: 'explore' | 'skip', arahan: string) => void;
 };
 
 type Step = 'landing' | 'context' | 'signals' | 'perception' | 'analyzing' | 'diagnosis' | 'direction';
@@ -15,18 +15,23 @@ export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
   const [data, setData] = useState<DiagnosticData>({});
   const [analysis, setAnalysis] = useState<string>('');
 
+
   const updateData = (key: keyof DiagnosticData, value: string | string[]) => {
     setData(prev => ({ ...prev, [key]: value }));
   };
+  const [directionChoice, setDirectionChoice] = useState<'explore' | 'skip' | null>(null);
+  const [diagnosis, setDiagnosis] = useState<string>('');
+  const [arahan, setArahan] = useState<string>('');
 
-  const handleComplete = () => {
-    onComplete(data);
+  const handleComplete = (choice: 'explore' | 'skip') => {
+    setDirectionChoice(choice);
+    onComplete(data, choice, arahan); // ✅ pass choice and arahan
   };
 
   const renderStep = () => {
     switch (step) {
       case 'landing':
-        return <LandingPage onStart={() => setStep('context')} onSkip={() => onComplete({})} />;
+        return <LandingPage onStart={() => setStep('context')} onSkip={() => onComplete({}, 'skip', '')} />;
       case 'context':
         return <ContextStep data={data} updateData={updateData} onNext={() => setStep('signals')} />;
       case 'signals':
@@ -35,13 +40,16 @@ export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
         return <PerceptionStep data={data} updateData={updateData} onNext={() => setStep('analyzing')} />;
       case 'analyzing':
         return <AnalyzingStep data={data} onComplete={(aiAnalysis) => {
-          setAnalysis(aiAnalysis); // ✅ Save AI analysis
+          const parsed = parseAnalysis(aiAnalysis);
+          setAnalysis(aiAnalysis);   // raw tetap disimpan
+          setDiagnosis(parsed.diagnosis);
+          setArahan(parsed.arahan);
           setStep('diagnosis');
         }} />;
-    case 'diagnosis':
-        return <DiagnosisStep data={data} analysis={analysis} onNext={() => setStep('direction')} />;
+      case 'diagnosis':
+        return <DiagnosisStep data={data} analysis={diagnosis} onNext={() => setStep('direction')} />;
       case 'direction':
-        return <DirectionStep analysis={analysis} onNext={handleComplete} />;
+        return <DirectionStep arahan={arahan} onNext={handleComplete} />;
       default:
         return null;
     }
@@ -52,6 +60,16 @@ export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
       {renderStep()}
     </div>
   );
+}
+
+function parseAnalysis(raw: string): { diagnosis: string; arahan: string } {
+  const diagnosisMatch = raw.match(/\[DIAGNOSIS\]([\s\S]*?)(?=\[ARAHAN\]|$)/i);
+  const arahanMatch = raw.match(/\[ARAHAN\]([\s\S]*?)$/i);
+
+  return {
+    diagnosis: diagnosisMatch?.[1]?.trim() || raw,
+    arahan: arahanMatch?.[1]?.trim() || "",
+  };
 }
 
 function formatAIResponse(text: string) {
@@ -65,8 +83,8 @@ function formatAIResponse(text: string) {
     if (listItems.length > 0) {
       if (listType === 'number') {
         elements.push(
-          <ol 
-            key={`list-${elements.length}`} 
+          <ol
+            key={`list-${elements.length}`}
             start={currentListStartNumber} // ✅ Use actual start number
             className="list-decimal list-inside space-y-2 my-4 ml-4"
           >
@@ -89,10 +107,10 @@ function formatAIResponse(text: string) {
   const processInlineFormatting = (line: string) => {
     // Remove any hashtags (headers)
     line = line.replace(/^#+\s*/g, '');
-    
+
     const segments: (string | JSX.Element)[] = [];
     let lastIndex = 0;
-    
+
     const patterns = [
       { regex: /\*\*(.+?)\*\*/g, tag: 'bold' },
       { regex: /__(.+?)__/g, tag: 'underline' },
@@ -100,7 +118,7 @@ function formatAIResponse(text: string) {
     ];
 
     const matches: Array<{ index: number; length: number; text: string; tag: string }> = [];
-    
+
     patterns.forEach(({ regex, tag }) => {
       let match;
       const r = new RegExp(regex);
@@ -154,7 +172,7 @@ function formatAIResponse(text: string) {
 
   lines.forEach((line, idx) => {
     line = line.trim();
-    
+
     if (!line) {
       flushList();
       return;
@@ -176,14 +194,14 @@ function formatAIResponse(text: string) {
     const numberedMatch = line.match(/^(\d+)\.\s+(.+)/);
     if (numberedMatch) {
       const lineNumber = parseInt(numberedMatch[1], 10);
-      
+
       // Check if this starts a new list
       if (listType !== 'number' || lineNumber === 1) {
         flushList();
         listType = 'number';
         currentListStartNumber = lineNumber;
       }
-      
+
       listItems.push(
         <li key={`li-${idx}`} className="text-gray-700 leading-relaxed">
           {processInlineFormatting(numberedMatch[2])}
@@ -221,7 +239,10 @@ function formatAIResponse(text: string) {
 }
 
 // Landing Page
-function LandingPage({ onStart, onSkip }: { onStart: () => void; onSkip: () => void }) {
+function LandingPage({ onStart, onSkip }: { 
+  onStart: () => void; 
+  onSkip: () => void  // ✅ simple void saja
+}) {
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="max-w-2xl mx-auto text-center">
@@ -253,7 +274,7 @@ function LandingPage({ onStart, onSkip }: { onStart: () => void; onSkip: () => v
             className="w-full max-w-md mx-auto flex items-center justify-center gap-3 px-8 py-4 bg-white text-gray-700 rounded-xl hover:bg-gray-50 transition-all border-2 border-gray-200 font-medium"
           >
             <MessageCircle className="w-5 h-5" />
-            Mulai diskuasi 
+            Mulai diskuasi
           </button>
         </div>
 
@@ -391,12 +412,12 @@ function SignalsStep({ data, updateData, onNext }: StepProps) {
             <div className="space-y-2">
               {[
                 "Penjualan tidak konsisten",
-                "Tim perlu terus diawasi",
-                "Terlalu banyak keputusan, tidak jelas prioritas",
-                "Ada pendapatan, namun keuangan terasa ketat",
-                "Semua terasa mendesak",
-                "Bingung bagian yang perlu dibenahi terlebih dulu",
-                "Banyak kerja, namun hasilnya kecil"
+                "Tim belum bisa bekerja mandiri tanpa banyak arahan",
+                "Terlalu banyak keputusan yang harus ditangani sendiri",
+                "Ada uang masuk, namun ruang gerak terasa sempit",
+                "Masalah yang sama terus berulang",
+                "Sulit menentukan mana yang harus diprioritaskan terlebih dulu",
+                "Upaya yang dikeluarkan terasa tidak sebanding dengan hasil"
               ].map((challenge) => {
                 const challenges = data.challenges ?? [];
                 const isSelected = challenges.includes(challenge);
@@ -407,16 +428,14 @@ function SignalsStep({ data, updateData, onNext }: StepProps) {
                     key={challenge}
                     onClick={() => toggleChallenge(challenge)}
                     disabled={isDisabled}
-                    className={`w-full text-left px-5 py-4 rounded-xl transition-all border-2 ${
-                      isSelected
-                        ? 'bg-red-50 border-red-300 text-red-900'
-                        : 'bg-white border-gray-200 hover:border-gray-300 text-gray-700'
-                    } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    className={`w-full text-left px-5 py-4 rounded-xl transition-all border-2 ${isSelected
+                      ? 'bg-red-50 border-red-300 text-red-900'
+                      : 'bg-white border-gray-200 hover:border-gray-300 text-gray-700'
+                      } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${
-                        isSelected ? 'bg-red-600 border-red-600' : 'border-gray-300'
-                      }`}>
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${isSelected ? 'bg-red-600 border-red-600' : 'border-gray-300'
+                        }`}>
                         {isSelected && (
                           <Check className="w-3 h-3 text-white" />
                         )}
@@ -479,24 +498,27 @@ function PerceptionStep({ data, updateData, onNext }: StepProps) {
               "Tim / kepemimpinan",
               "Operasional / sistem kerja",
               "Keuangan / arus kas",
-              "Strategi / arah bisnis",
+              "Arah / prioritas bisnis",
               "Jujur, saya belum tahu"
             ]}
             selected={data.perceivedProblem}
             onSelect={(v: string) => updateData('perceivedProblem', v)}
           />
 
-          <QuestionBlock
-            number={7}
-            question="Seberapa yakin dengan jawaban no.6?"
-            options={[
-              "Sangat yakin",
-              "Cukup yakin",
-              "Tidak yakin sama sekali"
-            ]}
-            selected={data.confidence}
-            onSelect={(v: string) => updateData('confidence', v)}
-          />
+          {/* ✅ Q7 hanya muncul setelah Q6 dijawab */}
+          {data.perceivedProblem && (
+            <QuestionBlock
+              number={7}
+              question="Seberapa yakin dengan jawaban no.6?"
+              options={[
+                "Sangat yakin",
+                "Cukup yakin",
+                "Tidak yakin sama sekali"
+              ]}
+              selected={data.confidence}
+              onSelect={(v: string) => updateData('confidence', v)}
+            />
+          )}
         </div>
 
         <button
@@ -511,11 +533,10 @@ function PerceptionStep({ data, updateData, onNext }: StepProps) {
     </div>
   );
 }
-
 // Analyzing Step
-function AnalyzingStep({ data, onComplete }: { 
-  data: DiagnosticData; 
-  onComplete: (analysis: string) => void 
+function AnalyzingStep({ data, onComplete }: {
+  data: DiagnosticData;
+  onComplete: (analysis: string) => void
 }) {
   const [error, setError] = useState<string>('');
 
@@ -536,12 +557,12 @@ function AnalyzingStep({ data, onComplete }: {
 
         // Wait minimum 2 seconds untuk UX
         await new Promise(resolve => setTimeout(resolve, 2000));
-        
+
         onComplete(response.data.analysis);
       } catch (err) {
         console.error('Analysis error:', err);
         setError('Gagal menganalisis. Mencoba lagi...');
-        
+
         // Retry after 1 second
         setTimeout(() => analyze(), 1000);
       }
@@ -571,10 +592,10 @@ type DiagnosisStepProps = {
   onNext: () => void;
 };
 
-function DiagnosisStep({ data, analysis, onNext }: { 
-  data: DiagnosticData; 
-  analysis: string; 
-  onNext: () => void 
+function DiagnosisStep({ data, analysis, onNext }: {
+  data: DiagnosticData;
+  analysis: string;
+  onNext: () => void
 }) {
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
@@ -613,19 +634,10 @@ function DiagnosisStep({ data, analysis, onNext }: {
   );
 }
 // Direction Step
-function DirectionStep({ analysis, onNext }: { 
-  analysis: string; 
-  onNext: () => void 
+function DirectionStep({ arahan, onNext }: {
+  arahan: string;
+  onNext: (choice: 'explore' | 'skip') => void
 }) {
-  // Extract focus area from analysis (simple approach)
-  const getFocusArea = () => {
-    if (analysis.toLowerCase().includes('prioritas')) return 'prioritas dan kerangka pengambilan keputusan';
-    if (analysis.toLowerCase().includes('tim')) return 'struktur tim dan kepemimpinan';
-    if (analysis.toLowerCase().includes('sistem')) return 'sistem operasional';
-    if (analysis.toLowerCase().includes('strategi')) return 'strategi bisnis';
-    return 'area yang paling berpengaruh saat ini';
-  };
-
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12">
       <div className="max-w-2xl w-full">
@@ -633,42 +645,30 @@ function DirectionStep({ analysis, onNext }: {
           <div className="text-sm text-red-600 font-semibold mb-2">ARAHAN</div>
           <h2 className="text-3xl font-bold text-gray-900 mb-4">Langkah Selanjutnya</h2>
           <p className="text-xl text-gray-700 leading-relaxed">
-            "Kita akan mulai dengan fokus pada <span className="font-bold text-red-700">{getFocusArea()}</span>, 
-            karena area ini memiliki pengaruh terbesar saat ini."
+            {arahan || "Ready siap membantu Anda mengurai masalah ini lebih dalam."}
           </p>
         </div>
 
         <div className="space-y-4">
           <button
-            onClick={onNext}
+            onClick={() => onNext('explore')}
             className="w-full flex items-center justify-between px-6 py-5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-all shadow-lg"
           >
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
-                🔍
-              </div>
+              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">🔍</div>
               <div className="text-left">
-                <div className="font-semibold">Mengurai masalah ini lebih dalam</div>
-                <div className="text-sm text-red-100">Eksplorasi akar penyebab</div>
+                <div className="font-semibold">Mulai dari sini</div>
+                <div className="text-sm text-red-100">Eksplorasi lebih dalam bersama Ready</div>
               </div>
             </div>
             <ArrowRight className="w-5 h-5" />
           </button>
 
           <button
-            onClick={onNext}
-            className="w-full flex items-center justify-between px-6 py-5 bg-white border-2 border-gray-200 text-gray-700 rounded-xl hover:border-gray-300 hover:shadow-md transition-all"
+            onClick={() => onNext('skip')}
+            className="w-full flex items-center justify-center px-6 py-5 bg-white border-2 border-gray-200 text-gray-500 rounded-xl hover:border-gray-300 transition-all font-medium"
           >
-            <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-gray-100 rounded-lg flex items-center justify-center">
-                🧭
-              </div>
-              <div className="text-left">
-                <div className="font-semibold">Menentukan prioritas yang perlu dibenahi</div>
-                <div className="text-sm text-gray-500">Buat action plan</div>
-              </div>
-            </div>
-            <ArrowRight className="w-5 h-5" />
+            Skip
           </button>
         </div>
       </div>
@@ -695,16 +695,14 @@ function QuestionBlock({ number, question, options, selected, onSelect }: Questi
           <button
             key={option}
             onClick={() => onSelect(option)}
-            className={`w-full text-left px-5 py-4 rounded-xl transition-all border-2 ${
-              selected === option
-                ? 'bg-red-50 border-red-300 text-red-900'
-                : 'bg-white border-gray-200 hover:border-gray-300 text-gray-700'
-            }`}
+            className={`w-full text-left px-5 py-4 rounded-xl transition-all border-2 ${selected === option
+              ? 'bg-red-50 border-red-300 text-red-900'
+              : 'bg-white border-gray-200 hover:border-gray-300 text-gray-700'
+              }`}
           >
             <div className="flex items-center gap-3">
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
-                selected === option ? 'bg-red-600 border-red-600' : 'border-gray-300'
-              }`}>
+              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selected === option ? 'bg-red-600 border-red-600' : 'border-gray-300'
+                }`}>
                 {selected === option && (
                   <div className="w-2 h-2 bg-white rounded-full" />
                 )}
