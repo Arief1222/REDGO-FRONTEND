@@ -1,0 +1,83 @@
+/* features/auth/animations.css */
+
+/* ── Keyframes ─────────────────────────────────────────── */
+@keyframes fadeUp {
+  from { opacity: 0; transform: translateY(32px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(40px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+@keyframes dotBounce {
+  0%, 80%, 100% { transform: translateY(0); opacity: 0.4; }
+  40%           { transform: translateY(-6px); opacity: 1; }
+}
+
+/* ── Base state: tersembunyi dulu ──────────────────────── */
+.anim-fade-up,
+.anim-fade-in,
+.anim-slide-left,
+.anim-slide-right,
+.anim-scale-in {
+  opacity: 0;
+  transition: none;
+}
+
+/* ── Aktif saat .is-visible ditambahkan ────────────────── */
+.anim-fade-up.is-visible     { animation: fadeUp      0.6s cubic-bezier(0.22,1,0.36,1) both; }
+.anim-fade-in.is-visible     { animation: fadeIn      0.5s ease both; }
+.anim-slide-left.is-visible  { animation: slideInLeft 0.6s cubic-bezier(0.22,1,0.36,1) both; }
+.anim-slide-right.is-visible { animation: slideInRight 0.6s cubic-bezier(0.22,1,0.36,1) both; }
+.anim-scale-in.is-visible    { animation: scaleIn     0.5s cubic-bezier(0.22,1,0.36,1) both; }
+
+/* ── Stagger delays ────────────────────────────────────── */
+.delay-100 { animation-delay: 0.1s; }
+.delay-200 { animation-delay: 0.2s; }
+.delay-300 { animation-delay: 0.3s; }
+.delay-400 { animation-delay: 0.4s; }
+.delay-500 { animation-delay: 0.5s; }
+.delay-600 { animation-delay: 0.6s; }
+.delay-700 { animation-delay: 0.7s; }
+
+/* ── Typing dots ───────────────────────────────────────── */
+.dot-bounce { animation: dotBounce 1.4s infinite ease-in-out both; }
+.dot-bounce:nth-child(1) { animation-delay: 0s; }
+.dot-bounce:nth-child(2) { animation-delay: 0.2s; }
+.dot-bounce:nth-child(3) { animation-delay: 0.4s; }
+
+/* ── Hover effects ─────────────────────────────────────── */
+.btn-hover {
+  transition: transform 0.18s ease, box-shadow 0.18s ease, opacity 0.18s ease;
+}
+.btn-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(217,59,43,0.25);
+}
+.btn-hover:active { transform: translateY(0); }
+
+.card-hover {
+  transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 12px 32px rgba(217,59,43,0.10);
+  border-color: #D93B2B !important;
+}
+
+.nav-btn-hover {
+  transition: opacity 0.15s ease, background 0.15s ease;
+}
+.nav-btn-hover:hover { opacity: 0.85; }

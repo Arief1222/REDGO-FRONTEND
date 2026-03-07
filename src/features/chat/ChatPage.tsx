@@ -4,20 +4,27 @@ import { useState } from "react";
 import { useChat } from "./hooks/useChat";
 import ChatSidebar from "./components/ChatSidebar";
 import ChatMessages from "./components/ChatMessages";
+import { parseClarifyBlock } from "../../app/api/chat/utils/clarify";
 import ChatInput from "./components/ChatInput";
-import { ChatWelcome } from "./components/ChatWelcome";
 import DiagnosticFlow from "./components/DiagnosticFlow";
-import EngineFlow from "./components/EngineFlow"; // ✅ NEW
+import EngineFlow from "./components/EngineFlow";
 
 export default function ChatPage() {
   const chat = useChat();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [clarifyDismissed, setClarifyDismissed] = useState(false);
 
-  const handlePromptClick = (prompt: string) => {
-    chat.sendMessage(prompt);
+  // ✅ Detect clarify dari pesan terakhir AI
+  const lastMsg = chat.messages[chat.messages.length - 1];
+  const clarifyData = lastMsg?.role === 'assistant' && !clarifyDismissed
+    ? parseClarifyBlock(lastMsg.content)
+    : { isClarify: false, question: '', options: [] };
+
+  // Reset dismissed state ketika ada pesan baru
+  const handleSend = () => {
+    setClarifyDismissed(false);
+    chat.sendMessage();
   };
-
-  const isWelcomeScreen = chat.messages.length === 0;
 
   return (
     <div className="h-screen flex bg-gray-50">
@@ -32,7 +39,6 @@ export default function ChatPage() {
       />
 
       <div className="flex-1 flex flex-col min-w-0">
-        {/* ✅ NEW: Show Engine flow when in engine mode */}
         {chat.mode === "engine" ? (
           chat.messages.length === 0 ? (
             <EngineFlow
@@ -40,20 +46,18 @@ export default function ChatPage() {
               onComplete={chat.handleEngineComplete}
             />
           ) : (
-            /* Engine mode with messages - show chat interface */
             <>
               <ChatMessages
                 messages={chat.messages}
                 loading={chat.loading}
                 endRef={chat.messagesEndRef}
               />
-
               <ChatInput
                 input={chat.input}
                 textareaRef={chat.textareaRef}
                 loading={chat.loading}
                 onChange={chat.setInput}
-                onSend={() => chat.sendMessage()}
+                onSend={handleSend}
                 onFileAttach={chat.handleFileAttach}
                 attachedFile={chat.attachedFile}
                 onRemoveFile={chat.handleRemoveFile}
@@ -64,72 +68,47 @@ export default function ChatPage() {
                 onCancelRecording={chat.onCancelRecording}
                 uploadingFile={chat.uploadingFile}
                 centered={false}
+                clarifyQuestion={clarifyData.isClarify ? clarifyData.question : undefined}
+                clarifyOptions={clarifyData.isClarify ? clarifyData.options : undefined}
+                onClarifySelect={(text) => { setClarifyDismissed(true); chat.sendMessage(text); }}
+                onClarifyDismiss={() => setClarifyDismissed(true)}
               />
             </>
           )
-        ) : chat.mode === "diagnostic" ? (
-          /* Show diagnostic flow when in diagnostic mode */
+        ) : chat.messages.length === 0 ? (
+          // ✅ Semua mode dengan 0 messages → tampilkan DiagnosticFlow langsung
+          // Tidak ada wrapper yang menghalangi klik
           <DiagnosticFlow onComplete={chat.handleDiagnosticComplete} />
         ) : (
-          /* Default discuss/explorer mode */
           <>
-            {isWelcomeScreen ? (
-              /* Welcome Screen with Centered Input */
-              <div className="flex-1 flex items-center justify-center">
-                <div className="w-full max-w-5xl px-8 -mt-20">
-                  {/* Welcome Content */}
-                  <div className="mb-12">
-                    <ChatWelcome onPromptClick={handlePromptClick} />
-                  </div>
-                  
-                  {/* Centered Input Box */}
-                  <ChatInput
-                    input={chat.input}
-                    textareaRef={chat.textareaRef}
-                    loading={chat.loading}
-                    onChange={chat.setInput}
-                    onSend={() => chat.sendMessage()}
-                    onFileAttach={chat.handleFileAttach}
-                    attachedFile={chat.attachedFile}
-                    onRemoveFile={chat.handleRemoveFile}
-                    isRecording={chat.isRecording}
-                    recordingTime={chat.recordingTime}
-                    onStartRecording={chat.onStartRecording}
-                    onStopRecording={chat.onStopRecording}
-                    onCancelRecording={chat.onCancelRecording}
-                    uploadingFile={chat.uploadingFile}
-                    centered={true}
-                  />
-                </div>
-              </div>
-            ) : (
-              /* Chat Messages with Bottom Input */
-              <>
-                <ChatMessages
-                  messages={chat.messages}
-                  loading={chat.loading}
-                  endRef={chat.messagesEndRef}
-                />
-
-                <ChatInput
-                  input={chat.input}
-                  textareaRef={chat.textareaRef}
-                  loading={chat.loading}
-                  onChange={chat.setInput}
-                  onSend={() => chat.sendMessage()}
-                  onFileAttach={chat.handleFileAttach}
-                  attachedFile={chat.attachedFile}
-                  onRemoveFile={chat.handleRemoveFile}
-                  isRecording={chat.isRecording}
-                  recordingTime={chat.recordingTime}
-                  onStartRecording={chat.onStartRecording}
-                  onStopRecording={chat.onStopRecording}
-                  onCancelRecording={chat.onCancelRecording}
-                  uploadingFile={chat.uploadingFile}
-                  centered={false}
-                />
-              </>
-            )}
+            <ChatMessages
+              messages={chat.messages}
+              loading={chat.loading}
+              endRef={chat.messagesEndRef}
+              showTopicButtons={chat.showTopicButtons}
+              onQuickReply={chat.handleTopicSelect}
+            />
+            <ChatInput
+              input={chat.input}
+              textareaRef={chat.textareaRef}
+              loading={chat.loading}
+              onChange={chat.setInput}
+              onSend={handleSend}
+              onFileAttach={chat.handleFileAttach}
+              attachedFile={chat.attachedFile}
+              onRemoveFile={chat.handleRemoveFile}
+              isRecording={chat.isRecording}
+              recordingTime={chat.recordingTime}
+              onStartRecording={chat.onStartRecording}
+              onStopRecording={chat.onStopRecording}
+              onCancelRecording={chat.onCancelRecording}
+              uploadingFile={chat.uploadingFile}
+              centered={false}
+              clarifyQuestion={clarifyData.isClarify ? clarifyData.question : undefined}
+              clarifyOptions={clarifyData.isClarify ? clarifyData.options : undefined}
+              onClarifySelect={(text) => { setClarifyDismissed(true); chat.sendMessage(text); }}
+              onClarifyDismiss={() => setClarifyDismissed(true)}
+            />
           </>
         )}
       </div>

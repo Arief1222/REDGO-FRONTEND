@@ -1,4 +1,4 @@
-import logoImage from "@/assets/images/logos/pp.jpeg";
+import logoImage from "/maskot.png";
 
 interface ChatWelcomeProps {
   onPromptClick: (prompt: string) => void;

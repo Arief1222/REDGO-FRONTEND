@@ -20,11 +20,25 @@ export function useChat() {
   // ===== STATES =====
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
-  const [mode, setMode] = useState<Mode>("diagnostic");
+  const [mode, _setMode] = useState<Mode>("diagnostic");
+  const setMode = (newMode: Mode) => {
+  if (newMode !== mode) {
+    // Reset state when switching mode from sidebar
+    setMessages([]);
+    setSessionId(crypto.randomUUID());
+    setDiagnosticData(null);
+    setAttachedFile(null);
+    setEngineTopic(null);
+    setEngineSubMode(null);
+  }
+  _setMode(newMode);
+};
+
   const [sessionId, setSessionId] = useState("");
   const [loading, setLoading] = useState(false);
   const [diagnosticData, setDiagnosticData] = useState<DiagnosticData | null>(null);
   const voiceRecorder = useVoiceRecorder();
+  const [showTopicButtons, setShowTopicButtons] = useState(false);
 
   // ✅ Engine mode states
   const [engineTopic, setEngineTopic] = useState<EngineTopic | null>(null);
@@ -46,6 +60,11 @@ export function useChat() {
   // ===== MUTATIONS =====
   const sendMessageMutation = useSendMessage();
   const saveDiagnosticMutation = useSaveDiagnostic();
+  const handleTopicSelect = (topicLabel: string) => {
+  setShowTopicButtons(false); // ✅ sembunyikan buttons
+  sendMessage(topicLabel);
+};
+
 
   // ===== EFFECTS =====
 
@@ -257,42 +276,49 @@ export function useChat() {
     setEngineSubMode(null);
   };
 
-  const handleDiagnosticComplete = async (
+// AFTER
+const handleDiagnosticComplete = async (
   data: DiagnosticData,
   choice: 'explore' | 'skip',
   arahan: string
 ) => {
-    console.log("📊 Diagnostic completed:", data);
-    setDiagnosticData(data);
+  _setMode("discuss");  // ✅ bypass wrapper, jangan reset session
+ 
 
-    if (
-      data.businessStage &&
-      data.teamSize &&
-      data.position &&
-      data.challenges &&
-      data.situation &&
-      data.perceivedProblem &&
-      data.confidence
-    ) {
-      try {
-        await saveDiagnosticMutation.mutateAsync({
-          session_id: sessionId,
-          business_stage: data.businessStage,
-          team_size: data.teamSize,
-          position: data.position,
-          challenges: data.challenges,
-          situation: data.situation,
-          perceived_problem: data.perceivedProblem,
-          confidence: data.confidence,
-        });
 
-        console.log("✅ Diagnostic data saved");
-      } catch (error) {
-        console.error("❌ Failed to save diagnostic:", error);
-      }
+  // ✅ Cek apakah dari "Mulai Diskusi" di landing (data kosong)
+  const isFromDiscussButton = !data.businessStage;
+
+  if (isFromDiscussButton) {
+    const welcomeMessage: ChatMessage = {
+      id: Date.now().toString(),
+      role: "assistant",
+      content: "Hello, Apa yang ingin didiskusikan?",
+    };
+    setMessages([welcomeMessage]);
+    setShowTopicButtons(true); // ✅ tampilkan topic buttons
+    return;
+  }
+
+  // Save diagnostic (hanya kalau data lengkap)
+  if (data.businessStage && data.teamSize && data.position && data.challenges && data.situation && data.perceivedProblem && data.confidence) {
+    try {
+      await saveDiagnosticMutation.mutateAsync({
+        session_id: sessionId,
+        business_stage: data.businessStage,
+        team_size: data.teamSize,
+        position: data.position,
+        challenges: data.challenges,
+        situation: data.situation,
+        perceived_problem: data.perceivedProblem,
+        confidence: data.confidence,
+      });
+    } catch (error) {
+      console.error("❌ Failed to save diagnostic:", error);
     }
+  }
 
-    setMode("discuss");
+      _setMode("discuss");  // ✅ sama di bawah
     
 
     // const welcomeMessage: ChatMessage = {
@@ -410,23 +436,21 @@ const handleEngineComplete = async (
       const lastBackendMsg = res.data.messages[res.data.messages.length - 1];
 
       if (
-        lastBackendMsg?.Mode &&
-        ["diagnostic", "discuss", "engine", "explorer"].includes(lastBackendMsg.Mode)
-      ) {
-        setMode(lastBackendMsg.Mode as Mode);
+  lastBackendMsg?.Mode &&
+  ["diagnostic", "discuss", "engine", "explorer"].includes(lastBackendMsg.Mode)
+) {
+  // ✅ Diagnostic history harus ditampilkan sebagai discuss
+  // karena DiagnosticFlow adalah onboarding flow, bukan chat view
+  const resolvedMode = lastBackendMsg.Mode === "diagnostic" ? "discuss" : lastBackendMsg.Mode as Mode;
+  setMode(resolvedMode);
 
-        // ✅ Set Engine mode states if available
-        if (lastBackendMsg.Mode === 'engine') {
-          if (lastBackendMsg.Topic) {
-            setEngineTopic(lastBackendMsg.Topic as EngineTopic);
-          }
-          if (lastBackendMsg.SubMode) {
-            setEngineSubMode(lastBackendMsg.SubMode as EngineSubMode);
-          }
-        }
-      } else {
-        setMode("discuss");
-      }
+  if (lastBackendMsg.Mode === 'engine') {
+    if (lastBackendMsg.Topic) setEngineTopic(lastBackendMsg.Topic as EngineTopic);
+    if (lastBackendMsg.SubMode) setEngineSubMode(lastBackendMsg.SubMode as EngineSubMode);
+  }
+} else {
+  setMode("discuss");
+}
 
       // Map messages
       const formattedMessages: ChatMessage[] = res.data.messages.map(
@@ -464,6 +488,8 @@ const handleEngineComplete = async (
     mode,
     loading,
     diagnosticData,
+    showTopicButtons,
+handleTopicSelect,
 
     // ✅ Engine mode states
     engineTopic,

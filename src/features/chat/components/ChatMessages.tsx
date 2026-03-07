@@ -1,17 +1,73 @@
 import { User, Download } from "lucide-react";
 import type { ChatMessage } from "@/app/api/chat";
 import type { RefObject } from "react";
-import logoImage from "@/assets/images/logos/pp.jpeg";
+import logoImage from "/maskot.jpg";
 import ChatAttachment from "./ChatAttachment";
-import { exportToExcel, exportToCSV } from '../hooks/exportTable'; // ✅ IMPORT EXPORT FUNCTIONS
+import { exportToExcel, exportToCSV } from '../hooks/exportTable';
+
+const TOPICS = [
+  { id: 'branding', label: 'Branding', emoji: '🎨' },
+  { id: 'marketing', label: 'Marketing', emoji: '📣' },
+];
 
 type Props = {
   messages: ChatMessage[];
   loading: boolean;
   endRef: RefObject<HTMLDivElement>;
+  onQuickReply?: (prompt: string) => void;
+  showTopicButtons?: boolean;
 };
 
-// ✅ IMPROVED: Better AI response formatter
+// ✅ Parse [CLARIFY] block dari AI response
+function parseClarifyBlock(text: string): { isClarify: boolean; question: string; options: { label: string; text: string }[] } {
+  const match = text.match(/\[CLARIFY\]([\s\S]*?)\[\/CLARIFY\]/);
+  if (!match) return { isClarify: false, question: '', options: [] };
+
+  const inner = match[1].trim();
+  const lines = inner.split('\n').map(l => l.trim()).filter(Boolean);
+
+  const question = lines[0] || '';
+  const options: { label: string; text: string }[] = [];
+
+  for (let i = 1; i < lines.length; i++) {
+    const optMatch = lines[i].match(/^([A-D])\.\s+(.+)/);
+    if (optMatch) {
+      options.push({ label: optMatch[1], text: optMatch[2] });
+    }
+  }
+
+  return { isClarify: true, question, options };
+}
+
+// ✅ Clarify Card component
+function ClarifyCard({ question, options, onSelect }: {
+  question: string;
+  options: { label: string; text: string }[];
+  onSelect?: (text: string) => void;
+}) {
+  return (
+    <div className="space-y-3">
+      <p className="text-gray-700 leading-relaxed">{question}</p>
+      <div className="flex flex-col gap-2">
+        {options.map((opt) => (
+          <button
+            key={opt.label}
+            onClick={() => onSelect?.(opt.text)}
+            className="flex items-center gap-3 px-4 py-3 bg-gray-50 hover:bg-red-50 border-2 border-gray-200 hover:border-red-300 rounded-xl transition-all text-left group"
+          >
+            <span className="flex-shrink-0 w-7 h-7 rounded-lg bg-white border-2 border-gray-200 group-hover:border-red-300 group-hover:bg-red-50 flex items-center justify-center text-xs font-bold text-gray-500 group-hover:text-red-600 transition-all">
+              {opt.label}
+            </span>
+            <span className="text-sm text-gray-700 group-hover:text-red-700 font-medium transition-colors">
+              {opt.text}
+            </span>
+          </button>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 function formatAIResponse(text: string) {
   const lines = text.split('\n');
   const elements: JSX.Element[] = [];
@@ -19,9 +75,9 @@ function formatAIResponse(text: string) {
   let listType: 'bullet' | 'number' | null = null;
   let currentListStartNumber = 1;
 
-  // ✅ Table state
   let tableHeaders: string[] = [];
   let tableBodyData: string[][] = [];
+
   const processInlineFormatting = (line: string) => {
     line = line.replace(/^#+\s*/g, '');
     const segments: (string | JSX.Element)[] = [];
@@ -61,7 +117,6 @@ function formatAIResponse(text: string) {
     if (typeof result === 'string') {
       return result.replace(/\*\*/g, '').replace(/\*/g, '');
     }
-
     return result;
   };
 
@@ -69,7 +124,6 @@ function formatAIResponse(text: string) {
     if (tableHeaders.length > 0) {
       const headers = tableHeaders;
       const bodyData = tableBodyData;
-
       elements.push(
         <div key={`table-wrap-${elements.length}`}>
           <div className="overflow-x-auto my-4">
@@ -104,17 +158,9 @@ function formatAIResponse(text: string) {
               <Download size={12} />
               Download Excel
             </button>
-            {/* <button
-              onClick={() => exportToCSV(headers, bodyData)}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 border border-blue-200 rounded-lg hover:bg-blue-100 transition-colors"
-            >
-              <Download size={12} />
-              Download CSV
-            </button> */}
           </div>
         </div>
       );
-
       tableHeaders = [];
       tableBodyData = [];
     }
@@ -141,176 +187,126 @@ function formatAIResponse(text: string) {
     }
   };
 
-  
-
   lines.forEach((line, idx) => {
     line = line.trim();
-  if (line === '---' || line === '***' || line === '___') return;
+    if (line === '---' || line === '***' || line === '___') return;
+    if (!line) { flushList(); flushTable(); return; }
 
-    if (!line) {
-      flushList();
-      flushTable();
-      return;
-    }
-
-    // Header
     if (line.match(/^#+\s+/)) {
-      flushList();
-      flushTable();
+      flushList(); flushTable();
       const cleanLine = line.replace(/^#+\s+/, '');
-      elements.push(
-        <h3 key={`h-${idx}`} className="font-bold text-lg text-gray-900 mt-6 mb-3">
-          {processInlineFormatting(cleanLine)}
-        </h3>
-      );
+      elements.push(<h3 key={`h-${idx}`} className="font-bold text-lg text-gray-900 mt-6 mb-3">{processInlineFormatting(cleanLine)}</h3>);
       return;
     }
 
-    // ✅ Table
     if (line.startsWith('|') && line.endsWith('|')) {
-      // Skip separator |---|---|
       if (line.match(/^\|[\s\-:]+\|/)) return;
-
       flushList();
-
-      const cells = line
-        .split('|')
-        .filter((_, i, arr) => i > 0 && i < arr.length - 1)
-        .map(cell => cell.trim());
-
+      const cells = line.split('|').filter((_, i, arr) => i > 0 && i < arr.length - 1).map(cell => cell.trim());
       const nextLine = lines[idx + 1]?.trim() || '';
       const isHeader = nextLine.match(/^\|[\s\-:]+\|/);
-
-      if (isHeader) {
-        flushTable(); // flush previous table if any
-        tableHeaders = cells;
-      } else {
-        tableBodyData.push(cells);
-      }
+      if (isHeader) { flushTable(); tableHeaders = cells; }
+      else { tableBodyData.push(cells); }
       return;
     }
 
-    // Numbered list
     const numberedMatch = line.match(/^(\d+)\.\s+(.+)/);
     if (numberedMatch) {
       flushTable();
       const lineNumber = parseInt(numberedMatch[1], 10);
-      if (listType !== 'number' || lineNumber === 1) {
-        flushList();
-        listType = 'number';
-        currentListStartNumber = lineNumber;
-      }
-      listItems.push(
-        <li key={`li-${idx}`} className="text-gray-700 leading-relaxed">
-          {processInlineFormatting(numberedMatch[2])}
-        </li>
-      );
+      if (listType !== 'number' || lineNumber === 1) { flushList(); listType = 'number'; currentListStartNumber = lineNumber; }
+      listItems.push(<li key={`li-${idx}`} className="text-gray-700 leading-relaxed">{processInlineFormatting(numberedMatch[2])}</li>);
       return;
     }
 
-    // Bullet list
     const bulletMatch = line.match(/^[-•]\s+(.+)/);
     if (bulletMatch) {
       flushTable();
-      if (listType !== 'bullet') {
-        flushList();
-        listType = 'bullet';
-      }
-      listItems.push(
-        <li key={`li-${idx}`} className="text-gray-700 leading-relaxed">
-          {processInlineFormatting(bulletMatch[1])}
-        </li>
-      );
+      if (listType !== 'bullet') { flushList(); listType = 'bullet'; }
+      listItems.push(<li key={`li-${idx}`} className="text-gray-700 leading-relaxed">{processInlineFormatting(bulletMatch[1])}</li>);
       return;
     }
 
-    // Paragraph
-    flushList();
-    flushTable();
-    elements.push(
-      <p key={`p-${idx}`} className="text-gray-700 leading-relaxed mb-3">
-        {processInlineFormatting(line)}
-      </p>
-    );
+    flushList(); flushTable();
+    elements.push(<p key={`p-${idx}`} className="text-gray-700 leading-relaxed mb-3">{processInlineFormatting(line)}</p>);
   });
 
   flushList();
   flushTable();
-
   return elements;
 }
 
-export default function ChatMessages({ messages, loading, endRef }: Props) {
-  return (
-    <div className="flex-1 overflow-y-auto px-4 py-8">
-      <div className="max-w-4xl mx-auto space-y-8">
-        {messages.map((m) => (
-          <div key={m.id} className="flex gap-4 items-start">
-            <div
-              className={`flex-shrink-0 w-10 h-10 rounded-xl flex items-center justify-center overflow-hidden ${m.role === "assistant"
-                ? "shadow-md"
-                : "bg-gray-200"
-                }`}
-            >
-              {m.role === "assistant" ? (
-                <img
-                  src={logoImage}
-                  alt="REDGO AI"
-                  className="w-full h-full object-cover"
-                />
-              ) : (
-                <User className="w-5 h-5 text-gray-600" />
-              )}
-            </div>
-            <div className="flex-1 min-w-0">
-              <div
-                className={`rounded-2xl px-5 py-4 ${m.role === "assistant"
-                  ? "bg-white shadow-sm border border-gray-100"
-                  : "bg-gradient-to-br from-gray-100 to-gray-50"
-                  }`}
-              >
-                {m.attachment && (
-                  <div className="mb-3">
-                    <ChatAttachment attachment={m.attachment} />
-                  </div>
-                )}
+export default function ChatMessages({ messages, loading, endRef, showTopicButtons, onQuickReply }: Props) {
+  const userInitial = (() => {
+    try {
+      const name = localStorage.getItem('userName') || localStorage.getItem('name') || 'U';
+      return name.charAt(0).toUpperCase();
+    } catch { return 'U'; }
+  })();
 
-                {m.role === "assistant" ? (
-                  <div className="prose prose-sm max-w-none">
-                    {formatAIResponse(m.content)}
+  return (
+    <div className="flex-1 overflow-y-auto px-4 py-8 bg-white">
+      <div className="max-w-4xl mx-auto space-y-6">
+        {messages.map((m, index) => (
+          <div key={m.id}>
+            {m.role === 'user' ? (
+              <div className="flex gap-3 items-start justify-end">
+                <div className="flex-1 min-w-0 flex justify-end">
+                  <div className="rounded-2xl px-5 py-4 max-w-[75%]" style={{ backgroundColor: '#D93B2B' }}>
+                    {m.attachment && <div className="mb-3"><ChatAttachment attachment={m.attachment} /></div>}
+                    <p className="text-white leading-relaxed">{m.content}</p>
                   </div>
-                ) : (
-                  <p className="text-gray-800 leading-relaxed">{m.content}</p>
-                )}
+                </div>
+                <div className="flex-shrink-0 w-10 h-10 rounded-full bg-gray-300 flex items-center justify-center text-sm font-bold text-gray-700">
+                  {userInitial}
+                </div>
               </div>
-            </div>
+            ) : m.content.includes('[CLARIFY]') ? null : (
+              <div className="flex gap-3 items-start">
+                <div className="flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden shadow-sm">
+                  <img src={logoImage} alt="Ready" className="w-full h-full object-cover" style={{ imageRendering: 'crisp-edges' }} />
+                </div>
+
+                <div className="flex-1 min-w-0">
+                  <div className="rounded-2xl px-5 py-4 bg-white shadow-sm border border-gray-100">
+                    {m.attachment && <div className="mb-3"><ChatAttachment attachment={m.attachment} /></div>}
+                    <div className="prose prose-sm max-w-none">
+                      {formatAIResponse(m.content)}
+                    </div>
+                  </div>
+
+                  {/* Topic buttons */}
+                  {showTopicButtons && index === 0 && onQuickReply && (
+                    <div className="mt-3 flex flex-wrap gap-2">
+                      {TOPICS.map((topic) => (
+                        <button
+                          key={topic.id}
+                          onClick={() => onQuickReply(topic.label)}
+                          className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-200 rounded-xl hover:border-red-300 hover:bg-red-50 hover:text-red-700 transition-all text-sm font-medium text-gray-700 shadow-sm"
+                        >
+                          <span>{topic.emoji}</span>
+                          {topic.label}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              </div>
+            )}
           </div>
         ))}
 
         {loading && (
-          <div className="flex gap-4 items-start">
-            <div className="flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden shadow-md">
-              <img
-                src={logoImage}
-                alt="REDGO AI"
-                className="w-full h-full object-cover"
-              />
+          <div className="flex gap-3 items-start">
+            <div className="flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden shadow-sm">
+              <img src={logoImage} alt="Ready" className="w-full h-full object-cover" />
             </div>
             <div className="flex-1">
               <div className="bg-white rounded-2xl px-5 py-4 shadow-sm border border-gray-100">
                 <div className="flex gap-1.5">
-                  <div
-                    className="w-2 h-2 bg-red-500 rounded-full animate-bounce"
-                    style={{ animationDelay: "0ms" }}
-                  ></div>
-                  <div
-                    className="w-2 h-2 bg-red-500 rounded-full animate-bounce"
-                    style={{ animationDelay: "150ms" }}
-                  ></div>
-                  <div
-                    className="w-2 h-2 bg-red-500 rounded-full animate-bounce"
-                    style={{ animationDelay: "300ms" }}
-                  ></div>
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                  <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
                 </div>
               </div>
             </div>

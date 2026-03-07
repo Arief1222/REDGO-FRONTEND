@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArrowRight, Lightbulb, MessageCircle, Check, Loader2 } from 'lucide-react';
+import { ArrowRight, ArrowLeft, Lightbulb, MessageCircle, Check, Loader2 } from 'lucide-react';
 import type { DiagnosticData } from '@/app/api/chat';
 import { chatApi } from '@/app/api/chat';
 
@@ -9,63 +9,264 @@ type DiagnosticFlowProps = {
 
 type Step = 'landing' | 'context' | 'signals' | 'perception' | 'analyzing' | 'diagnosis' | 'direction';
 
-// Main Component
+const STEP_ORDER: Step[] = ['landing', 'context', 'signals', 'perception', 'analyzing', 'diagnosis', 'direction'];
+
 export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
   const [step, setStep] = useState<Step>('landing');
   const [data, setData] = useState<DiagnosticData>({});
-  const [analysis, setAnalysis] = useState<string>('');
-
+  const [diagnosis, setDiagnosis] = useState<string>('');
+  const [arahan, setArahan] = useState<string>('');
 
   const updateData = (key: keyof DiagnosticData, value: string | string[]) => {
     setData(prev => ({ ...prev, [key]: value }));
   };
-  const [directionChoice, setDirectionChoice] = useState<'explore' | 'skip' | null>(null);
-  const [diagnosis, setDiagnosis] = useState<string>('');
-  const [arahan, setArahan] = useState<string>('');
+
+  // ✅ Kembali = selalu ke landing
+  const goToLanding = () => setStep('landing');
+
+  // ✅ Sebelumnya = satu step ke belakang (hanya page 2,3,4)
+  const goPrev = () => {
+    if (step === 'diagnosis') {
+      setStep('perception');
+    } else {
+      const idx = STEP_ORDER.indexOf(step);
+      if (idx > 0) setStep(STEP_ORDER[idx - 1]);
+    }
+  };
 
   const handleComplete = (choice: 'explore' | 'skip') => {
-    setDirectionChoice(choice);
-    onComplete(data, choice, arahan); // ✅ pass choice and arahan
+    onComplete(data, choice, arahan);
   };
 
   const renderStep = () => {
     switch (step) {
       case 'landing':
         return <LandingPage onStart={() => setStep('context')} onSkip={() => onComplete({}, 'skip', '')} />;
+
       case 'context':
-        return <ContextStep data={data} updateData={updateData} onNext={() => setStep('signals')} />;
+        return (
+          <StepShell
+            label="STEP 1 OF 4" title="Konteks Bisnis" subtitle="Ceritakan kondisi bisnis Anda saat ini"
+            onBack={goToLanding} showPrev={false} onPrev={goPrev}
+            onNext={() => setStep('signals')} canNext={!!(data.businessStage && data.teamSize && data.position)} nextLabel="Lanjutkan"
+          >
+            <QuestionBlock number={1} question="Di tahap mana bisnis berjalan?"
+              options={["Baru mulai (≤ 6 bulan)", "> 6 bulan tapi belum stabil", "Stabil, tim bekerja sesuai, tapi stuck", "Tumbuh tapi terasa kacau", "Sedang menurun / banyak tekanan"]}
+              selected={data.businessStage} onSelect={v => updateData('businessStage', v)} />
+            <QuestionBlock number={2} question="Berapa orang yang terlibat?"
+              options={["Sendiri", "2–5 orang", "6–10 orang", "11–20 orang", "20 +"]}
+              selected={data.teamSize} onSelect={v => updateData('teamSize', v)} />
+            <QuestionBlock number={3} question="Mana yang menggambarkan posisi Anda saat ini?"
+              options={["Hampir semua masih dikerjakan sendiri", "Mengelola tim, tapi masih ikut eksekusi", "Fokus di pengambilan keputusan", "Terjebak urusan harian / pemadam kebakaran"]}
+              selected={data.position} onSelect={v => updateData('position', v)} />
+          </StepShell>
+        );
+
       case 'signals':
-        return <SignalsStep data={data} updateData={updateData} onNext={() => setStep('perception')} />;
+        return (
+          <StepShell
+            label="STEP 2 OF 4" title="Identifikasi Sinyal Masalah" subtitle="Apa yang paling Anda rasakan?"
+            onBack={goToLanding} showPrev={true} onPrev={goPrev}
+            onNext={() => setStep('perception')} canNext={!!((data.challenges?.length ?? 0) > 0 && data.situation)} nextLabel="Lanjutkan"
+          >
+            <SignalQuestions data={data} updateData={updateData} />
+          </StepShell>
+        );
+
       case 'perception':
-        return <PerceptionStep data={data} updateData={updateData} onNext={() => setStep('analyzing')} />;
+        return (
+          <StepShell
+            label="STEP 3 OF 4" title="Persepsi Anda" subtitle="Menurut Anda, apa masalah utamanya?"
+            onBack={goToLanding} showPrev={true} onPrev={goPrev}
+            onNext={() => setStep('analyzing')} canNext={!!(data.perceivedProblem && data.confidence)} nextLabel="Selesai & Analisis"
+          >
+            <QuestionBlock number={6} question="Menurut Anda, apa yang saat ini menjadi masalah utama?"
+              options={["Penjualan / pemasaran", "Tim / kepemimpinan", "Operasional / sistem kerja", "Keuangan / arus kas", "Arah / prioritas bisnis", "Jujur, saya belum tahu"]}
+              selected={data.perceivedProblem} onSelect={v => updateData('perceivedProblem', v)} />
+            {data.perceivedProblem && (
+              <QuestionBlock number={7} question="Seberapa yakin dengan jawaban no.6?"
+                options={["Sangat yakin", "Cukup yakin", "Tidak yakin sama sekali"]}
+                selected={data.confidence} onSelect={v => updateData('confidence', v)} />
+            )}
+          </StepShell>
+        );
+
       case 'analyzing':
         return <AnalyzingStep data={data} onComplete={(aiAnalysis) => {
           const parsed = parseAnalysis(aiAnalysis);
-          setAnalysis(aiAnalysis);   // raw tetap disimpan
           setDiagnosis(parsed.diagnosis);
           setArahan(parsed.arahan);
           setStep('diagnosis');
         }} />;
+
       case 'diagnosis':
-        return <DiagnosisStep data={data} analysis={diagnosis} onNext={() => setStep('direction')} />;
+        return (
+          <StepShell
+            label="STEP 4 OF 4" title="Temuan Awal" subtitle=""
+            onBack={goToLanding} showPrev={true} onPrev={goPrev}
+            onNext={() => setStep('direction')} canNext={true} nextLabel="Lanjut ke Arahan"
+          >
+            <div className="bg-white border-2 border-red-200 rounded-2xl p-6">
+              <div className="flex items-start gap-4">
+                <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Lightbulb className="w-5 h-5 text-red-600" />
+                </div>
+                <div className="flex-1">
+                  <h3 className="text-base font-semibold text-gray-900 mb-3">Berdasarkan jawaban Anda...</h3>
+                  <div className="prose prose-sm max-w-none">{formatAIResponse(diagnosis)}</div>
+                </div>
+              </div>
+            </div>
+          </StepShell>
+        );
+
       case 'direction':
-        return <DirectionStep arahan={arahan} onNext={handleComplete} />;
+        return <DirectionStep arahan={arahan} onNext={handleComplete} onBack={goToLanding} />;
+
       default:
         return null;
     }
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    // ✅ h-full + overflow-y-auto agar scroll di dalam container, tidak overflow ke luar
+    <div className="h-full overflow-y-auto bg-gradient-to-br from-gray-50 to-gray-100">
       {renderStep()}
     </div>
+  );
+}
+
+// ✅ StepShell — layout wrapper untuk semua step kecuali landing & direction
+function StepShell({
+  label, title, subtitle, children,
+  onBack, showPrev, onPrev, onNext, canNext, nextLabel,
+}: {
+  label: string; title: string; subtitle: string; children: React.ReactNode;
+  onBack: () => void; showPrev: boolean; onPrev: () => void;
+  onNext: () => void; canNext: boolean; nextLabel: string;
+}) {
+  return (
+    <div className="min-h-full px-4 py-8">
+      <div className="max-w-2xl w-full mx-auto">
+
+        {/* ✅ Tombol Kembali ke landing — kiri atas, semua page */}
+        <button
+          onClick={onBack}
+          type="button"
+          className="flex items-center gap-1.5 text-gray-400 hover:text-gray-600 transition-colors text-sm mb-6"
+        >
+          <ArrowLeft className="w-4 h-4" />
+          Kembali
+        </button>
+
+        {/* Header */}
+        <div className="mb-6">
+          <div className="text-xs text-red-600 font-semibold mb-1 uppercase tracking-wide">{label}</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-1">{title}</h2>
+          {subtitle && <p className="text-sm text-gray-500">{subtitle}</p>}
+        </div>
+
+        {/* Content */}
+        <div className="space-y-6">
+          {children}
+        </div>
+
+        {/* ✅ Bottom nav — Sebelumnya (kiri, page 2-4) + tombol utama (kanan) */}
+        <div className="mt-8 flex gap-3">
+          {showPrev && (
+            <button
+              onClick={onPrev}
+              type="button"
+              className="flex items-center justify-center gap-2 px-5 py-3.5 bg-white border-2 border-gray-200 text-gray-600 rounded-xl hover:border-gray-300 hover:text-gray-800 transition-all font-medium text-sm whitespace-nowrap"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              Sebelumnya
+            </button>
+          )}
+          <button
+            onClick={onNext}
+            disabled={!canNext}
+            className="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 disabled:opacity-40 disabled:cursor-not-allowed transition-all shadow-md font-semibold text-sm"
+          >
+            {nextLabel}
+            <ArrowRight className="w-4 h-4" />
+          </button>
+        </div>
+
+      </div>
+    </div>
+  );
+}
+
+// Signal questions
+function SignalQuestions({ data, updateData }: {
+  data: DiagnosticData;
+  updateData: (key: keyof DiagnosticData, value: string | string[]) => void;
+}) {
+  const toggleChallenge = (challenge: string) => {
+    const current = data.challenges || [];
+    if (current.includes(challenge)) {
+      updateData('challenges', current.filter(c => c !== challenge));
+    } else if (current.length < 3) {
+      updateData('challenges', [...current, challenge]);
+    }
+  };
+
+  return (
+    <>
+      <div>
+        <div className="text-base font-semibold text-gray-900 mb-1">
+          4. Yang paling melelahkan akhir-akhir ini{' '}
+          <span className="text-gray-400 font-normal text-sm">(pilih maks. 3)</span>
+        </div>
+        <div className="text-xs text-gray-400 mb-3">Dipilih: {data.challenges?.length ?? 0} / 3</div>
+        <div className="space-y-2">
+          {[
+            "Penjualan tidak konsisten",
+            "Tim belum bisa bekerja mandiri tanpa banyak arahan",
+            "Terlalu banyak keputusan yang harus ditangani sendiri",
+            "Ada uang masuk, namun ruang gerak terasa sempit",
+            "Masalah yang sama terus berulang",
+            "Sulit menentukan mana yang harus diprioritaskan terlebih dulu",
+            "Upaya yang dikeluarkan terasa tidak sebanding dengan hasil"
+          ].map(challenge => {
+            const isSelected = (data.challenges ?? []).includes(challenge);
+            const isDisabled = !isSelected && (data.challenges?.length ?? 0) >= 3;
+            return (
+              <button
+                key={challenge}
+                onClick={() => toggleChallenge(challenge)}
+                disabled={isDisabled}
+                className={`w-full text-left px-4 py-3 rounded-xl transition-all border-2 text-sm
+                  ${isSelected ? 'bg-red-50 border-red-300 text-red-900' : 'bg-white border-gray-200 hover:border-gray-300 text-gray-700'}
+                  ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className={`w-4 h-4 rounded border-2 flex items-center justify-center flex-shrink-0 ${isSelected ? 'bg-red-600 border-red-600' : 'border-gray-300'}`}>
+                    {isSelected && <Check className="w-2.5 h-2.5 text-white" />}
+                  </div>
+                  <span className="font-medium">{challenge}</span>
+                </div>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      <QuestionBlock
+        number={5}
+        question="Mana yang menggambarkan situasi bisnis saat ini?"
+        options={["Tim sudah kerja keras, tapi hasil tidak sebanding", "Masalah yang sama terus terulang", "Bisnis bertumbuh, namun menambah masalah internal", "Takut salah ambil keputusan", "Saya merasa jadi bottleneck bisnis"]}
+        selected={data.situation}
+        onSelect={v => updateData('situation', v)}
+      />
+    </>
   );
 }
 
 function parseAnalysis(raw: string): { diagnosis: string; arahan: string } {
   const diagnosisMatch = raw.match(/\[DIAGNOSIS\]([\s\S]*?)(?=\[ARAHAN\]|$)/i);
   const arahanMatch = raw.match(/\[ARAHAN\]([\s\S]*?)$/i);
-
   return {
     diagnosis: diagnosisMatch?.[1]?.trim() || raw,
     arahan: arahanMatch?.[1]?.trim() || "",
@@ -77,179 +278,75 @@ function formatAIResponse(text: string) {
   const elements: JSX.Element[] = [];
   let listItems: JSX.Element[] = [];
   let listType: 'bullet' | 'number' | null = null;
-  let currentListStartNumber = 1; // ✅ Track actual list number
+  let currentListStartNumber = 1;
 
   const flushList = () => {
     if (listItems.length > 0) {
       if (listType === 'number') {
-        elements.push(
-          <ol
-            key={`list-${elements.length}`}
-            start={currentListStartNumber} // ✅ Use actual start number
-            className="list-decimal list-inside space-y-2 my-4 ml-4"
-          >
-            {listItems}
-          </ol>
-        );
+        elements.push(<ol key={`ol-${elements.length}`} start={currentListStartNumber} className="list-decimal list-inside space-y-1.5 my-3 ml-4">{listItems}</ol>);
       } else {
-        elements.push(
-          <ul key={`list-${elements.length}`} className="list-disc list-inside space-y-2 my-4 ml-4">
-            {listItems}
-          </ul>
-        );
+        elements.push(<ul key={`ul-${elements.length}`} className="list-disc list-inside space-y-1.5 my-3 ml-4">{listItems}</ul>);
       }
-      listItems = [];
-      listType = null;
-      currentListStartNumber = 1;
+      listItems = []; listType = null; currentListStartNumber = 1;
     }
   };
 
-  const processInlineFormatting = (line: string) => {
-    // Remove any hashtags (headers)
+  const processInline = (line: string): (string | JSX.Element)[] | string => {
     line = line.replace(/^#+\s*/g, '');
-
     const segments: (string | JSX.Element)[] = [];
     let lastIndex = 0;
-
-    const patterns = [
-      { regex: /\*\*(.+?)\*\*/g, tag: 'bold' },
-      { regex: /__(.+?)__/g, tag: 'underline' },
-      { regex: /_(.+?)_/g, tag: 'italic' },
-    ];
-
     const matches: Array<{ index: number; length: number; text: string; tag: string }> = [];
-
-    patterns.forEach(({ regex, tag }) => {
-      let match;
-      const r = new RegExp(regex);
-      while ((match = r.exec(line)) !== null) {
-        matches.push({
-          index: match.index,
-          length: match[0].length,
-          text: match[1],
-          tag,
-        });
-      }
-    });
-
+    [{ regex: /\*\*(.+?)\*\*/g, tag: 'bold' }, { regex: /__(.+?)__/g, tag: 'u' }, { regex: /_(.+?)_/g, tag: 'i' }]
+      .forEach(({ regex, tag }) => { let m; const r = new RegExp(regex); while ((m = r.exec(line)) !== null) matches.push({ index: m.index, length: m[0].length, text: m[1], tag }); });
     matches.sort((a, b) => a.index - b.index);
-
-    matches.forEach((match, i) => {
-      if (match.index > lastIndex) {
-        segments.push(line.substring(lastIndex, match.index));
-      }
-
-      const key = `fmt-${i}`;
-      if (match.tag === 'bold') {
-        segments.push(
-          <strong key={key} className="font-bold text-gray-900">
-            {match.text}
-          </strong>
-        );
-      } else if (match.tag === 'underline') {
-        segments.push(
-          <span key={key} className="underline font-semibold text-red-700">
-            {match.text}
-          </span>
-        );
-      } else if (match.tag === 'italic') {
-        segments.push(
-          <em key={key} className="italic text-gray-700">
-            {match.text}
-          </em>
-        );
-      }
-
-      lastIndex = match.index + match.length;
+    matches.forEach((m, i) => {
+      if (m.index > lastIndex) segments.push(line.substring(lastIndex, m.index));
+      if (m.tag === 'bold') segments.push(<strong key={i} className="font-bold text-gray-900">{m.text}</strong>);
+      else if (m.tag === 'u') segments.push(<span key={i} className="underline font-semibold text-red-700">{m.text}</span>);
+      else segments.push(<em key={i} className="italic text-gray-600">{m.text}</em>);
+      lastIndex = m.index + m.length;
     });
-
-    if (lastIndex < line.length) {
-      segments.push(line.substring(lastIndex));
-    }
-
+    if (lastIndex < line.length) segments.push(line.substring(lastIndex));
     return segments.length > 0 ? segments : line;
   };
 
   lines.forEach((line, idx) => {
     line = line.trim();
-
-    if (!line) {
-      flushList();
-      return;
-    }
-
-    // Remove hashtag headers
+    if (!line) { flushList(); return; }
     if (line.match(/^#+\s+/)) {
       flushList();
-      const cleanLine = line.replace(/^#+\s+/, '');
-      elements.push(
-        <h3 key={`h-${idx}`} className="font-bold text-lg text-gray-900 mt-6 mb-3">
-          {processInlineFormatting(cleanLine)}
-        </h3>
-      );
+      elements.push(<h3 key={idx} className="font-bold text-sm text-gray-900 mt-4 mb-2">{processInline(line.replace(/^#+\s+/, ''))}</h3>);
       return;
     }
-
-    // ✅ FIXED: Better numbered list detection
-    const numberedMatch = line.match(/^(\d+)\.\s+(.+)/);
-    if (numberedMatch) {
-      const lineNumber = parseInt(numberedMatch[1], 10);
-
-      // Check if this starts a new list
-      if (listType !== 'number' || lineNumber === 1) {
-        flushList();
-        listType = 'number';
-        currentListStartNumber = lineNumber;
-      }
-
-      listItems.push(
-        <li key={`li-${idx}`} className="text-gray-700 leading-relaxed">
-          {processInlineFormatting(numberedMatch[2])}
-        </li>
-      );
+    const nm = line.match(/^(\d+)\.\s+(.+)/);
+    if (nm) {
+      const n = parseInt(nm[1]);
+      if (listType !== 'number' || n === 1) { flushList(); listType = 'number'; currentListStartNumber = n; }
+      listItems.push(<li key={idx} className="text-gray-700 text-sm leading-relaxed">{processInline(nm[2])}</li>);
       return;
     }
-
-    // Bullet list
-    const bulletMatch = line.match(/^[-•]\s+(.+)/);
-    if (bulletMatch) {
-      if (listType !== 'bullet') {
-        flushList();
-        listType = 'bullet';
-      }
-      listItems.push(
-        <li key={`li-${idx}`} className="text-gray-700 leading-relaxed">
-          {processInlineFormatting(bulletMatch[1])}
-        </li>
-      );
+    const bm = line.match(/^[-•]\s+(.+)/);
+    if (bm) {
+      if (listType !== 'bullet') { flushList(); listType = 'bullet'; }
+      listItems.push(<li key={idx} className="text-gray-700 text-sm leading-relaxed">{processInline(bm[1])}</li>);
       return;
     }
-
-    // Regular paragraph
     flushList();
-    elements.push(
-      <p key={`p-${idx}`} className="text-gray-700 leading-relaxed mb-3">
-        {processInlineFormatting(line)}
-      </p>
-    );
+    elements.push(<p key={idx} className="text-gray-700 text-sm leading-relaxed mb-2">{processInline(line)}</p>);
   });
-
   flushList();
   return elements;
 }
 
-// Landing Page
-function LandingPage({ onStart, onSkip }: { 
-  onStart: () => void; 
-  onSkip: () => void  // ✅ simple void saja
-}) {
+// Landing
+function LandingPage({ onStart, onSkip }: { onStart: () => void; onSkip: () => void }) {
   return (
     <div className="min-h-screen flex items-center justify-center px-4">
       <div className="max-w-2xl mx-auto text-center">
         <div className="mb-8">
           <div className="inline-flex items-center gap-2 bg-red-50 text-red-700 px-4 py-2 rounded-full text-sm font-medium mb-6">
             <Lightbulb className="w-4 h-4" />
-            Mode: Find Your Problem
+            Mode: Probe
           </div>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-6">
             "Most founders don't have a solution problem. They have a misdiagnosis problem."
@@ -274,34 +371,22 @@ function LandingPage({ onStart, onSkip }: {
             className="w-full max-w-md mx-auto flex items-center justify-center gap-3 px-8 py-4 bg-white text-gray-700 rounded-xl hover:bg-gray-50 transition-all border-2 border-gray-200 font-medium"
           >
             <MessageCircle className="w-5 h-5" />
-            Mulai diskuasi
+            Mulai diskusi
           </button>
         </div>
 
         <div className="mt-12 grid md:grid-cols-3 gap-4 text-left">
           <div className="bg-white p-6 rounded-xl border border-gray-200">
-            <div className="text-sm font-semibold text-gray-900 mb-2">
-              Diagnose business issues
-            </div>
-            <div className="text-sm text-gray-600">
-              Not just answer questions
-            </div>
+            <div className="text-sm font-semibold text-gray-900 mb-2">Diagnose business issues</div>
+            <div className="text-sm text-gray-600">Not just answer questions</div>
           </div>
           <div className="bg-white p-6 rounded-xl border border-gray-200">
-            <div className="text-sm font-semibold text-gray-900 mb-2">
-              Structured thinking
-            </div>
-            <div className="text-sm text-gray-600">
-              Not random advice
-            </div>
+            <div className="text-sm font-semibold text-gray-900 mb-2">Structured thinking</div>
+            <div className="text-sm text-gray-600">Not random advice</div>
           </div>
           <div className="bg-white p-6 rounded-xl border border-gray-200">
-            <div className="text-sm font-semibold text-gray-900 mb-2">
-              Built for founders
-            </div>
-            <div className="text-sm text-gray-600">
-              Who are tired of guessing
-            </div>
+            <div className="text-sm font-semibold text-gray-900 mb-2">Built for founders</div>
+            <div className="text-sm text-gray-600">Who are tired of guessing</div>
           </div>
         </div>
       </div>
@@ -309,243 +394,14 @@ function LandingPage({ onStart, onSkip }: {
   );
 }
 
-// Context Step
-type StepProps = {
-  data: DiagnosticData;
-  updateData: (key: keyof DiagnosticData, value: string | string[]) => void;
-  onNext: () => void;
-};
-
-function ContextStep({ data, updateData, onNext }: StepProps) {
-  const canProceed = data.businessStage && data.teamSize && data.position;
-
-  return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="max-w-2xl w-full">
-        <div className="mb-8">
-          <div className="text-sm text-red-600 font-semibold mb-2">STEP 1 OF 4</div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Konteks Bisnis</h2>
-          <p className="text-gray-600">Ceritakan kondisi bisnis Anda saat ini</p>
-        </div>
-
-        <div className="space-y-8">
-          <QuestionBlock
-            number={1}
-            question="Di tahap mana bisnis berjalan?"
-            options={[
-              "Baru mulai (≤ 6 bulan)",
-              "> 6 bulan tapi belum stabil",
-              "Stabil, tim bekerja sesuai, tapi stuck",
-              "Tumbuh tapi terasa kacau",
-              "Sedang menurun / banyak tekanan"
-            ]}
-            selected={data.businessStage}
-            onSelect={(v: string) => updateData('businessStage', v)}
-          />
-
-          <QuestionBlock
-            number={2}
-            question="Berapa orang yang terlibat?"
-            options={["Sendiri", "2–5 orang", "6–10 orang", "11–20 orang", "20 +"]}
-            selected={data.teamSize}
-            onSelect={(v: string) => updateData('teamSize', v)}
-          />
-
-          <QuestionBlock
-            number={3}
-            question="Mana yang menggambarkan posisi Anda saat ini?"
-            options={[
-              "Hampir semua masih dikerjakan sendiri",
-              "Mengelola tim, tapi masih ikut eksekusi",
-              "Fokus di pengambilan keputusan",
-              "Terjebak urusan harian / pemadam kebakaran"
-            ]}
-            selected={data.position}
-            onSelect={(v: string) => updateData('position', v)}
-          />
-        </div>
-
-        <button
-          onClick={onNext}
-          disabled={!canProceed}
-          className="mt-8 w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg font-semibold"
-        >
-          Lanjutkan
-          <ArrowRight className="w-5 h-5" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// Signals Step
-// Signals Step
-function SignalsStep({ data, updateData, onNext }: StepProps) {
-  const toggleChallenge = (challenge: string) => {
-    const current = data.challenges || [];
-    if (current.includes(challenge)) {
-      updateData('challenges', current.filter((c: string) => c !== challenge));
-    } else if (current.length < 3) {
-      updateData('challenges', [...current, challenge]);
-    }
-  };
-
-  const canProceed = (data.challenges?.length ?? 0) > 0 && data.situation;
-
-  return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="max-w-2xl w-full">
-        <div className="mb-8">
-          <div className="text-sm text-red-600 font-semibold mb-2">STEP 2 OF 4</div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Identifikasi Sinyal Masalah</h2>
-          <p className="text-gray-600">Apa yang paling Anda rasakan?</p>
-        </div>
-
-        <div className="space-y-8">
-          <div>
-            <div className="text-lg font-semibold text-gray-900 mb-4">
-              4. Yang paling melelahkan akhir-akhir ini (pilih maks. 3)
-            </div>
-            <div className="text-sm text-gray-500 mb-4">
-              Dipilih: {data.challenges?.length ?? 0} / 3
-            </div>
-            <div className="space-y-2">
-              {[
-                "Penjualan tidak konsisten",
-                "Tim belum bisa bekerja mandiri tanpa banyak arahan",
-                "Terlalu banyak keputusan yang harus ditangani sendiri",
-                "Ada uang masuk, namun ruang gerak terasa sempit",
-                "Masalah yang sama terus berulang",
-                "Sulit menentukan mana yang harus diprioritaskan terlebih dulu",
-                "Upaya yang dikeluarkan terasa tidak sebanding dengan hasil"
-              ].map((challenge) => {
-                const challenges = data.challenges ?? [];
-                const isSelected = challenges.includes(challenge);
-                const isDisabled = !isSelected && challenges.length >= 3;
-
-                return (
-                  <button
-                    key={challenge}
-                    onClick={() => toggleChallenge(challenge)}
-                    disabled={isDisabled}
-                    className={`w-full text-left px-5 py-4 rounded-xl transition-all border-2 ${isSelected
-                      ? 'bg-red-50 border-red-300 text-red-900'
-                      : 'bg-white border-gray-200 hover:border-gray-300 text-gray-700'
-                      } ${isDisabled ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    <div className="flex items-center gap-3">
-                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center ${isSelected ? 'bg-red-600 border-red-600' : 'border-gray-300'
-                        }`}>
-                        {isSelected && (
-                          <Check className="w-3 h-3 text-white" />
-                        )}
-                      </div>
-                      <span className="font-medium">{challenge}</span>
-                    </div>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          <QuestionBlock
-            number={5}
-            question="Mana yang menggambarkan situasi bisnis saat ini?"
-            options={[
-              "Tim sudah kerja keras, tapi hasil tidak sebanding",
-              "Masalah yang sama terus terulang",
-              "Bisnis bertumbuh, namun menambah masalah internal",
-              "Takut salah ambil keputusan",
-              "Saya merasa jadi bottleneck bisnis"
-            ]}
-            selected={data.situation}
-            onSelect={(v: string) => updateData('situation', v)}
-          />
-        </div>
-
-        <button
-          onClick={onNext}
-          disabled={!canProceed}
-          className="mt-8 w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg font-semibold"
-        >
-          Lanjutkan
-          <ArrowRight className="w-5 h-5" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
-// Perception Step
-function PerceptionStep({ data, updateData, onNext }: StepProps) {
-  const canProceed = data.perceivedProblem && data.confidence;
-
-  return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="max-w-2xl w-full">
-        <div className="mb-8">
-          <div className="text-sm text-red-600 font-semibold mb-2">STEP 3 OF 4</div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">Persepsi Anda</h2>
-          <p className="text-gray-600">Menurut Anda, apa masalah utamanya?</p>
-        </div>
-
-        <div className="space-y-8">
-          <QuestionBlock
-            number={6}
-            question="Menurut Anda, apa yang saat ini menjadi masalah utama?"
-            options={[
-              "Penjualan / pemasaran",
-              "Tim / kepemimpinan",
-              "Operasional / sistem kerja",
-              "Keuangan / arus kas",
-              "Arah / prioritas bisnis",
-              "Jujur, saya belum tahu"
-            ]}
-            selected={data.perceivedProblem}
-            onSelect={(v: string) => updateData('perceivedProblem', v)}
-          />
-
-          {/* ✅ Q7 hanya muncul setelah Q6 dijawab */}
-          {data.perceivedProblem && (
-            <QuestionBlock
-              number={7}
-              question="Seberapa yakin dengan jawaban no.6?"
-              options={[
-                "Sangat yakin",
-                "Cukup yakin",
-                "Tidak yakin sama sekali"
-              ]}
-              selected={data.confidence}
-              onSelect={(v: string) => updateData('confidence', v)}
-            />
-          )}
-        </div>
-
-        <button
-          onClick={onNext}
-          disabled={!canProceed}
-          className="mt-8 w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-lg font-semibold"
-        >
-          Selesai & Analisis
-          <ArrowRight className="w-5 h-5" />
-        </button>
-      </div>
-    </div>
-  );
-}
-// Analyzing Step
-function AnalyzingStep({ data, onComplete }: {
-  data: DiagnosticData;
-  onComplete: (analysis: string) => void
-}) {
-  const [error, setError] = useState<string>('');
-
+// Analyzing
+function AnalyzingStep({ data, onComplete }: { data: DiagnosticData; onComplete: (a: string) => void }) {
+  const [error, setError] = useState('');
   React.useEffect(() => {
     const analyze = async () => {
       try {
-        // Call AI analysis API
-        const response = await chatApi.analyzeDiagnostic({
-          session_id: crypto.randomUUID(), // Temporary, akan di-set nanti
+        const res = await chatApi.analyzeDiagnostic({
+          session_id: crypto.randomUUID(),
           business_stage: data.businessStage || '',
           team_size: data.teamSize || '',
           position: data.position || '',
@@ -554,108 +410,43 @@ function AnalyzingStep({ data, onComplete }: {
           perceived_problem: data.perceivedProblem || '',
           confidence: data.confidence || '',
         });
-
-        // Wait minimum 2 seconds untuk UX
-        await new Promise(resolve => setTimeout(resolve, 2000));
-
-        onComplete(response.data.analysis);
-      } catch (err) {
-        console.error('Analysis error:', err);
+        await new Promise(r => setTimeout(r, 2000));
+        onComplete(res.data.analysis);
+      } catch {
         setError('Gagal menganalisis. Mencoba lagi...');
-
-        // Retry after 1 second
-        setTimeout(() => analyze(), 1000);
+        setTimeout(analyze, 1000);
       }
     };
-
     analyze();
   }, []);
-
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
+    <div className="h-full flex items-center justify-center px-4 py-12">
       <div className="max-w-md mx-auto text-center">
-        <Loader2 className="w-16 h-16 text-red-600 mx-auto mb-6 animate-spin" />
-        <h2 className="text-2xl font-bold text-gray-900 mb-3">
-          {error || 'Menganalisis jawaban Anda...'}
-        </h2>
-        <p className="text-gray-600">
-          Ready sedang menyimpulkan pola dari informasi yang Anda berikan
-        </p>
+        <Loader2 className="w-12 h-12 text-red-600 mx-auto mb-5 animate-spin" />
+        <h2 className="text-xl font-bold text-gray-900 mb-2">{error || 'Menganalisis jawaban Anda...'}</h2>
+        <p className="text-sm text-gray-500">Ready sedang menyimpulkan pola dari informasi yang Anda berikan</p>
       </div>
     </div>
   );
 }
 
-// Diagnosis Step
-type DiagnosisStepProps = {
-  data: DiagnosticData;
-  onNext: () => void;
-};
-
-function DiagnosisStep({ data, analysis, onNext }: {
-  data: DiagnosticData;
-  analysis: string;
-  onNext: () => void
-}) {
+// Direction
+function DirectionStep({ arahan, onNext, onBack }: { arahan: string; onNext: (c: 'explore' | 'skip') => void; onBack: () => void }) {
   return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="max-w-2xl w-full">
-        <div className="mb-8">
-          <div className="text-sm text-red-600 font-semibold mb-2">DIAGNOSIS</div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-6">Temuan Awal</h2>
-        </div>
-
-        <div className="bg-white border-2 border-red-200 rounded-2xl p-8 mb-8">
-          <div className="flex items-start gap-4">
-            <div className="w-12 h-12 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
-              <Lightbulb className="w-6 h-6 text-red-600" />
-            </div>
-            <div className="flex-1">
-              <h3 className="text-xl font-semibold text-gray-900 mb-4">
-                Berdasarkan jawaban Anda...
-              </h3>
-              {/* ✅ USE formatAIResponse instead of whitespace-pre-line */}
-              <div className="prose prose-sm max-w-none">
-                {formatAIResponse(analysis)}
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <button
-          onClick={onNext}
-          className="w-full flex items-center justify-center gap-2 px-6 py-4 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-all shadow-lg font-semibold"
-        >
-          Lanjut ke Arahan
-          <ArrowRight className="w-5 h-5" />
+    <div className="min-h-full px-4 py-8">
+      <div className="max-w-2xl w-full mx-auto">
+        <button onClick={onBack} type="button" className="flex items-center gap-1.5 text-gray-400 hover:text-gray-600 transition-colors text-sm mb-6">
+          <ArrowLeft className="w-4 h-4" /> Kembali
         </button>
-      </div>
-    </div>
-  );
-}
-// Direction Step
-function DirectionStep({ arahan, onNext }: {
-  arahan: string;
-  onNext: (choice: 'explore' | 'skip') => void
-}) {
-  return (
-    <div className="min-h-screen flex items-center justify-center px-4 py-12">
-      <div className="max-w-2xl w-full">
         <div className="mb-8">
-          <div className="text-sm text-red-600 font-semibold mb-2">ARAHAN</div>
-          <h2 className="text-3xl font-bold text-gray-900 mb-4">Langkah Selanjutnya</h2>
-          <p className="text-xl text-gray-700 leading-relaxed">
-            {arahan || "Ready siap membantu Anda mengurai masalah ini lebih dalam."}
-          </p>
+          <div className="text-xs text-red-600 font-semibold mb-1 uppercase tracking-wide">ARAHAN</div>
+          <h2 className="text-2xl font-bold text-gray-900 mb-3">Langkah Selanjutnya</h2>
+          <p className="text-base text-gray-700 leading-relaxed">{arahan || "Ready siap membantu Anda mengurai masalah ini lebih dalam."}</p>
         </div>
-
-        <div className="space-y-4">
-          <button
-            onClick={() => onNext('explore')}
-            className="w-full flex items-center justify-between px-6 py-5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-all shadow-lg"
-          >
+        <div className="space-y-3">
+          <button onClick={() => onNext('explore')} className="w-full flex items-center justify-between px-6 py-5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-all shadow-lg">
             <div className="flex items-center gap-4">
-              <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">🔍</div>
+              <div className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center text-lg">🔍</div>
               <div className="text-left">
                 <div className="font-semibold">Mulai dari sini</div>
                 <div className="text-sm text-red-100">Eksplorasi lebih dalam bersama Ready</div>
@@ -663,11 +454,7 @@ function DirectionStep({ arahan, onNext }: {
             </div>
             <ArrowRight className="w-5 h-5" />
           </button>
-
-          <button
-            onClick={() => onNext('skip')}
-            className="w-full flex items-center justify-center px-6 py-5 bg-white border-2 border-gray-200 text-gray-500 rounded-xl hover:border-gray-300 transition-all font-medium"
-          >
+          <button onClick={() => onNext('skip')} className="w-full flex items-center justify-center px-6 py-4 bg-white border-2 border-gray-200 text-gray-500 rounded-xl hover:border-gray-300 transition-all font-medium text-sm">
             Skip
           </button>
         </div>
@@ -675,37 +462,23 @@ function DirectionStep({ arahan, onNext }: {
     </div>
   );
 }
-// Reusable Question Block Component
-type QuestionBlockProps = {
-  number: number;
-  question: string;
-  options: string[];
-  selected?: string;
-  onSelect: (option: string) => void;
-};
 
-function QuestionBlock({ number, question, options, selected, onSelect }: QuestionBlockProps) {
+// Question Block
+function QuestionBlock({ number, question, options, selected, onSelect }: {
+  number: number; question: string; options: string[]; selected?: string; onSelect: (v: string) => void;
+}) {
   return (
     <div>
-      <div className="text-lg font-semibold text-gray-900 mb-4">
-        {number}. {question}
-      </div>
+      <div className="text-base font-semibold text-gray-900 mb-3">{number}. {question}</div>
       <div className="space-y-2">
-        {options.map((option: string) => (
-          <button
-            key={option}
-            onClick={() => onSelect(option)}
-            className={`w-full text-left px-5 py-4 rounded-xl transition-all border-2 ${selected === option
-              ? 'bg-red-50 border-red-300 text-red-900'
-              : 'bg-white border-gray-200 hover:border-gray-300 text-gray-700'
-              }`}
+        {options.map(option => (
+          <button key={option} onClick={() => onSelect(option)}
+            className={`w-full text-left px-4 py-3 rounded-xl transition-all border-2 text-sm
+              ${selected === option ? 'bg-red-50 border-red-300 text-red-900' : 'bg-white border-gray-200 hover:border-gray-300 text-gray-700'}`}
           >
             <div className="flex items-center gap-3">
-              <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${selected === option ? 'bg-red-600 border-red-600' : 'border-gray-300'
-                }`}>
-                {selected === option && (
-                  <div className="w-2 h-2 bg-white rounded-full" />
-                )}
+              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selected === option ? 'bg-red-600 border-red-600' : 'border-gray-300'}`}>
+                {selected === option && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
               </div>
               <span className="font-medium">{option}</span>
             </div>
