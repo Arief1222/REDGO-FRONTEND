@@ -1,8 +1,9 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback } from 'react';
 import { useForm } from 'react-hook-form';
-import { useNavigate, useSearchParams } from 'react-router';
-import { useGetVerifyEmail, usePostResendVerification } from '@/app/api/auth/useAuthApi';
+import { useNavigate, useLocation } from 'react-router';
+import { usePostVerifyEmail, usePostResendVerification } from '@/app/api/auth/useAuthApi';
 import { useToast } from '@/shared/hooks/useToast';
+import { ROUTES } from '@/app/constants/router';
 
 interface TwoStepsFormData {
   code1: string;
@@ -15,71 +16,69 @@ interface TwoStepsFormData {
 
 export const useTwoStepsForm = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
-  const [searchParams] = useSearchParams();
-  const tokenFromUrl = searchParams.get('token') || '';
+
+  // Email dikirim via navigate state dari register
+  const email = location.state?.email || '';
 
   const form = useForm<TwoStepsFormData>({
     defaultValues: {
-      code1: '',
-      code2: '',
-      code3: '',
-      code4: '',
-      code5: '',
-      code6: '',
+      code1: '', code2: '', code3: '',
+      code4: '', code5: '', code6: '',
     },
   });
 
-  // Verify email with token from URL (if available)
-  const { isLoading: isVerifying, data: verifyData, error: verifyError } = useGetVerifyEmail(tokenFromUrl, {
-    enabled: !!tokenFromUrl,
+  const { mutate: verifyEmail, isPending: isVerifying } = usePostVerifyEmail({
+    onSuccess: () => {
+      toast.success('Email verified successfully!');
+      setTimeout(() => {
+        navigate(ROUTES.AUTH.LOGIN_1, { replace: true });
+      }, 1500);
+    },
+    onError: (error: any) => {
+      toast.error(error?.response?.data?.message || 'Invalid or expired OTP.');
+    },
   });
 
-  // Handle verification success/error
-  useEffect(() => {
-    if (verifyData) {
-      toast.success('Email verified successfully!');
-      navigate('/');
-    }
-  }, [verifyData, toast, navigate]);
-
-  useEffect(() => {
-    if (verifyError) {
-      const errorMessage = (verifyError as any)?.response?.data?.message || 'Email verification failed.';
-      toast.error(errorMessage);
-    }
-  }, [verifyError, toast]);
-
-  // Resend verification email
   const resendMutation = usePostResendVerification({
     onSuccess: () => {
-      toast.success('Verification email has been resent!');
+      toast.success('OTP baru telah dikirim ke email kamu.');
+    },
+    onError: () => {
+      toast.error('Gagal mengirim ulang OTP.');
     },
   });
 
   const onSubmit = useCallback(async (data: TwoStepsFormData) => {
-    const verificationCode = Object.values(data).join('');
+    const otp = Object.values(data).join('');
+    if (otp.length !== 6) {
+      toast.error('Masukkan 6 digit OTP.');
+      return;
+    }
+    if (!email) {
+      toast.error('Email tidak ditemukan. Silakan register ulang.');
+      navigate(ROUTES.AUTH.REGISTER_1);
+      return;
+    }
+    verifyEmail({ email, otp });
+  }, [verifyEmail, email, navigate, toast]);
 
-    // TODO: Implement verification with manual code input
-    // Currently, the API only supports verification via token from email link
-    // This requires a new API endpoint: POST /verify-email-with-code
-    toast.warning('Manual code verification not yet implemented. Please check your email for verification link.');
-    console.warn('Verification code entered:', verificationCode);
-    console.warn('API endpoint for manual code verification is not available yet');
-  }, [toast]);
-
-  const handleResendCode = useCallback(async (email: string) => {
+  const handleResendCode = useCallback(async () => {
+    if (!email) {
+      toast.error('Email tidak ditemukan. Silakan register ulang.');
+      return;
+    }
     try {
       await resendMutation.mutateAsync({ email });
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || 'Failed to resend verification email.';
-      toast.error(errorMessage);
-      console.error('Resend verification error:', error);
+      toast.error(error?.response?.data?.message || 'Gagal mengirim ulang OTP.');
     }
-  }, [resendMutation, toast]);
+  }, [resendMutation, email, toast]);
 
   return {
     form,
+    email,
     errorMessage: '',
     isLoading: isVerifying || resendMutation.isPending,
     onSubmit,

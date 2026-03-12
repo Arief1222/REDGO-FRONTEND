@@ -9,6 +9,7 @@ import type {
   User,
   ForgotPasswordData,
   ResetPasswordData,
+  VerifyEmailData,
 } from './type';
 
 /** Auth API endpoints */
@@ -19,8 +20,8 @@ export const authApi = {
   login: (credentials: LoginCredentials) =>
     apiService.post<ResponseApi<LoginData>>('/core/v1/login', credentials),
 
-  verifyEmail: (token: string) =>
-    apiService.get<ResponseApi<void>>('/core/v1/verify-email', { token }),
+  verifyEmail: (data: VerifyEmailData) =>
+    apiService.post<ResponseApi<void>>('/core/v1/verify-email', data),
 
   resendVerification: (data: ResendVerificationData) =>
     apiService.post<ResponseApi<void>>('/core/v1/resend-verification', data),

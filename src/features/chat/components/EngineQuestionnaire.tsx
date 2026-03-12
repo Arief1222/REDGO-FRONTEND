@@ -49,7 +49,8 @@ export default function EngineQuestionnaire({
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
-    if (e.key === 'Enter' && e.ctrlKey) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
       if (!isLastQuestion && canProceed) {
         handleNext();
       } else if (isLastQuestion && allAnswered) {
@@ -119,7 +120,7 @@ export default function EngineQuestionnaire({
         />
 
         <p className="text-xs text-gray-500 mt-2">
-          Tekan Ctrl + Enter untuk lanjut ke pertanyaan berikutnya
+          Tekan Shift + Enter untuk baris baru
         </p>
 
       </div>
@@ -182,8 +183,8 @@ export default function EngineQuestionnaire({
                 ${currentQuestionIndex === idx
                   ? 'bg-red-600 text-white'
                   : answers[q.key]?.trim()
-                  ? 'bg-green-100 text-green-700 border border-green-300'
-                  : 'bg-white text-gray-600 border border-gray-300'
+                    ? 'bg-green-100 text-green-700 border border-green-300'
+                    : 'bg-white text-gray-600 border border-gray-300'
                 }
               `}
             >

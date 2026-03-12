@@ -1,7 +1,7 @@
 import { User, Download } from "lucide-react";
 import type { ChatMessage } from "@/app/api/chat";
 import type { RefObject } from "react";
-import logoImage from "/maskot.jpg";
+import logoImage from "/maskot.png";
 import ChatAttachment from "./ChatAttachment";
 import { exportToExcel, exportToCSV } from '../hooks/exportTable';
 

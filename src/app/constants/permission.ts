@@ -34,39 +34,6 @@ export const PERMISSIONS = {
   PROMPT_EDIT: 'prompts.update',
   //PROMPT_DELETE: 'prompts.delete',
 
-  // // Item permissions
-  // ITEMS_VIEW: 'items.read',
-  // ITEMS_CREATE: 'items.create',
-  // ITEMS_EDIT: 'items.update',
-  // ITEMS_DELETE: 'items.delete',
-
-  // // Supplier permissions
-  // SUPPLIER_VIEW: 'suppliers.read',
-  // SUPPLIER_CREATE: 'suppliers.create',
-  // SUPPLIER_EDIT: 'suppliers.update',
-  // SUPPLIER_DELETE: 'suppliers.delete',
-
-  // // Warehouse permissions
-  // WAREHOUSE_VIEW: 'warehouse.read',
-  // WAREHOUSE_CREATE: 'warehouse.create',
-  // WAREHOUSE_EDIT: 'warehouse.update',
-  // WAREHOUSE_DELETE: 'warehouse.delete',
-
-  // // Receiving permissions
-  // RECEIVINGS_VIEW: 'receivings.read',
-  // RECEIVINGS_CREATE: 'receivings.create',
-  // RECEIVINGS_UPDATE: 'receivings.update',
-  // RECEIVINGS_DELETE: 'receivings.delete',
-  // RECEIVINGS_POST: 'receivings.post',
-
-  // // Issuing permissions
-  // ISSUINGS_VIEW: 'issuings.read',
-  // ISSUINGS_CREATE: 'issuings.create',
-  // ISSUINGS_UPDATE: 'issuings.update',
-  // ISSUINGS_DELETE: 'issuings.delete',
-  // ISSUINGS_POST: 'issuings.post',
-
-  // Add more permissions as needed
-} as const;
-
-export type Permission = typeof PERMISSIONS[keyof typeof PERMISSIONS];
+  PRIVACY_VIEW: 'privacy.read',
+  TOS_VIEW: 'tos.read',
+}

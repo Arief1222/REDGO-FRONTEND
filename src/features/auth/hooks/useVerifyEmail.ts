@@ -1,66 +1,68 @@
-import { useEffect, useRef } from 'react';
-import { useNavigate, useSearchParams } from 'react-router';
-import { useGetVerifyEmail } from '@/app/api/auth/useAuthApi';
+// features/auth/hooks/useVerifyEmail.ts
+import { useState } from 'react';
+import { useNavigate, useLocation } from 'react-router';
+import { usePostVerifyEmail, usePostResendVerification } from '@/app/api/auth/useAuthApi';
 import { useToast } from '@/shared/hooks/useToast';
 import { ROUTES } from '@/app/constants/router';
 
 export const useVerifyEmail = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const toast = useToast();
-  const [searchParams] = useSearchParams();
-  const token = searchParams.get('token') || '';
-  const hasShownToast = useRef(false);
-  const hasNavigated = useRef(false);
 
-  // Auto-verify when page loads with token
-  const verifyMutation = useGetVerifyEmail(token, {
-    enabled: !!token,
+  // Email dikirim via navigate state dari halaman register
+  const email = location.state?.email || '';
+
+  const [otp, setOtp] = useState('');
+
+  const { mutate: verifyEmail, isPending: isVerifying, isSuccess, isError, error } = usePostVerifyEmail({
+    onSuccess: () => {
+      toast.success('Email verified successfully!');
+      setTimeout(() => {
+        navigate(`${ROUTES.AUTH.LOGIN_1}?direct=1`, { replace: true });
+      }, 1500);
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Invalid or expired OTP.');
+    },
   });
 
-  // Handle successful verification
-  useEffect(() => {
-    if (verifyMutation.data && !hasNavigated.current) {
-      if (!hasShownToast.current) {
-        toast.success('Email verified successfully!');
-        hasShownToast.current = true;
-      }
-      hasNavigated.current = true;
-      const timer = setTimeout(() => {
-        navigate(ROUTES.AUTH.LOGIN_1, { replace: true });
-      }, 2000);
-      return () => clearTimeout(timer);
-    }
-  }, [verifyMutation.data]);
+  const { mutate: resendOTP, isPending: isResending } = usePostResendVerification({
+    onSuccess: () => {
+      toast.success('OTP baru telah dikirim ke email kamu.');
+    },
+    onError: () => {
+      toast.error('Gagal mengirim ulang OTP. Coba lagi.');
+    },
+  });
 
-  // Handle error
-  useEffect(() => {
-    if (verifyMutation.error && !hasShownToast.current) {
-      const errorMessage = (verifyMutation.error as any)?.response?.data?.message || 'Verification failed.';
-      toast.error(errorMessage);
-      hasShownToast.current = true;
+  const handleVerify = (otpOverride?: string) => {
+    const finalOtp = (otpOverride ?? otp).replace(/\s/g, '');
+    if (finalOtp.length !== 6 || !/^\d{6}$/.test(finalOtp)) {
+      toast.error('OTP harus 6 digit angka.');
+      return;
     }
-  }, [verifyMutation.error]);
+    verifyEmail({ email, otp: finalOtp });
+  };
 
-  // Handle missing token
-  useEffect(() => {
-    if (!token && !hasNavigated.current) {
-      if (!hasShownToast.current) {
-        toast.error('Invalid verification link');
-        hasShownToast.current = true;
-      }
-      hasNavigated.current = true;
-      const timer = setTimeout(() => {
-        navigate(ROUTES.AUTH.LOGIN_1, { replace: true });
-      }, 1500);
-      return () => clearTimeout(timer);
+  const handleResend = () => {
+    if (!email) {
+      toast.error('Email tidak ditemukan. Silakan register ulang.');
+      return;
     }
-  }, [token]);
+    resendOTP({ email });
+  };
 
   return {
-    isLoading: verifyMutation.isLoading,
-    isSuccess: !!verifyMutation.data,
-    isError: !!verifyMutation.error,
-    errorMessage: (verifyMutation.error as any)?.response?.data?.message || '',
-    hasToken: !!token,
+    email,
+    otp,
+    setOtp,
+    isVerifying,
+    isResending,
+    isSuccess,
+    isError,
+    errorMessage: (error as any)?.response?.data?.message || '',
+    handleVerify,
+    handleResend,
   };
 };

@@ -17,15 +17,14 @@ const Login2 = Loadable(lazy(() => import('@/features/auth/Login2Page')));
 const Register = Loadable(lazy(() => import('@/features/auth/RegisterPage')));
 const Register2 = Loadable(lazy(() => import('@/features/auth/Register2Page')));
 const ForgotPassword = Loadable(lazy(() => import('@/features/auth/ForgotPasswordPage')));
-const ForgotPassword2 = Loadable(
-  lazy(() => import('@/features/auth/ForgotPassword2Page')),
-);
+const ForgotPassword2 = Loadable(lazy(() => import('@/features/auth/ForgotPassword2Page')));
 const ResetPassword = Loadable(lazy(() => import('@/features/auth/ResetPasswordPage')));
 const VerifyEmail = Loadable(lazy(() => import('@/features/auth/VerifyEmailPage')));
 const TwoSteps = Loadable(lazy(() => import('@/features/auth/TwoStepsPage')));
 const TwoSteps2 = Loadable(lazy(() => import('@/features/auth/TwoSteps2Page')));
 const Maintainance = Loadable(lazy(() => import('@/features/auth/MaintainancePage')));
-
+const PrivacyPage = Loadable(lazy(() => import('@/features/auth/PrivacyPage')));
+const TosPage = Loadable(lazy(() => import('@/features/auth/TosPage')));
 
 const SamplePage = Loadable(lazy(() => import('@/features/sample-page/pages/SamplePage')));
 const UserPage = Loadable(lazy(() => import('@/features/user/UserPage')));
@@ -33,12 +32,13 @@ const RolePage = Loadable(lazy(() => import('@/features/role/RolePage')));
 const RagPage = Loadable(lazy(() => import('@/features/rag/RagPage')));
 const ChatPage = Loadable(lazy(() => import('@/features/chat/ChatPage')));
 const PromptPage = Loadable(lazy(() => import('@/features/prompts/PromptPage')));
+
 // Error pages
 const ForbiddenPage = Loadable(lazy(() => import('@/features/errors/403Page')));
 const NotFoundPage = Loadable(lazy(() => import('@/features/errors/404Page')));
 
 const Router = [
-  // Error pages - must be first to prevent wildcard catching
+  // Error pages
   {
     path: ROUTES.ERROR.FORBIDDEN,
     element: <BlankLayout />,
@@ -53,7 +53,24 @@ const Router = [
       { path: '', element: <NotFoundPage /> },
     ],
   },
-  // Guest routes - must be before AuthGuard to prevent redirect loop
+
+  // Public pages (no auth needed, no GuestGuard)
+  {
+    path: ROUTES.AUTH.PRIVACY,
+    element: <BlankLayout />,
+    children: [
+      { path: '', element: <PrivacyPage /> },
+    ],
+  },
+  {
+    path: ROUTES.AUTH.TOS,
+    element: <BlankLayout />,
+    children: [
+      { path: '', element: <TosPage /> },
+    ],
+  },
+
+  // Guest routes (redirect to dashboard if already logged in)
   {
     path: ROUTES.ROOT,
     element: <GuestGuard><BlankLayout /></GuestGuard>,
@@ -71,6 +88,7 @@ const Router = [
       { path: ROUTES.AUTH.MAINTENANCE, element: <Maintainance /> },
     ],
   },
+
   // Protected routes - requires authentication
   {
     path: ROUTES.ROOT,
@@ -117,12 +135,11 @@ const Router = [
             <PromptPage />
           </PermissionGuard>
         )
-      }
+      },
     ],
   },
 
-
-  // Fallback route - catch all unmatched routes
+  // Fallback route
   {
     path: '*',
     element: <Navigate to={ROUTES.ERROR.NOT_FOUND} replace />,

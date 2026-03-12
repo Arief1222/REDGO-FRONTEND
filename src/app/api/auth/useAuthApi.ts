@@ -12,6 +12,7 @@ import type {
   User,
   ForgotPasswordData,
   ResetPasswordData,
+  VerifyEmailData
 } from './type';
 
 /** Auth API React Query hooks */
@@ -56,14 +57,11 @@ export const usePostLogin = (
   });
 };
 
-export const useGetVerifyEmail = (
-  token: string,
-  options?: Omit<UseQueryOptions<AxiosResponse<ResponseApi<void>>, AxiosError>, 'queryKey' | 'queryFn'>
+export const usePostVerifyEmail = (
+  options?: UseMutationOptions<AxiosResponse<ResponseApi<void>>, AxiosError, VerifyEmailData>
 ) => {
-  return useQuery({
-    queryKey: authKeys.verifyEmail(token),
-    queryFn: () => authApi.verifyEmail(token),
-    enabled: !!token && (options?.enabled ?? true),
+  return useMutation({
+    mutationFn: (data: VerifyEmailData) => authApi.verifyEmail(data),
     ...options,
   });
 };

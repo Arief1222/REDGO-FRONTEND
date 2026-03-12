@@ -60,3 +60,8 @@ export interface ResetPasswordData {
   token: string;
   new_password: string;
 }
+
+export interface VerifyEmailData {
+  email: string;
+  otp: string;
+}

@@ -7,15 +7,10 @@ export const ROUTES = {
   // Root
   ROOT: '/',
   ROOT_PUBLIC: '/auth',
-
+  
   // Dashboard
   DASHBOARD: '/',
   SAMPLE_PAGE: '/sample-page',
-  // ITEMS: '/items',
-  // SUPPLIERS: '/suppliers',
-  // WAREHOUSE: '/warehouse',
-  // RECEIVINGS: '/receivings',
-  // ISSUINGS: '/issuings',
 
   // User Management
   USERS: '/users',
@@ -28,6 +23,8 @@ export const ROUTES = {
 
   // Auth Routes
   AUTH: {
+    PRIVACY: '/auth/privacy',
+    TOS: '/auth/tos',
     LOGIN_1: '/auth/login',
     LOGIN_2: '/auth/login-2',
     REGISTER_1: '/auth/register',

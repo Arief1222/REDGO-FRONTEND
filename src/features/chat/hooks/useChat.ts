@@ -20,10 +20,15 @@ export function useChat() {
   // ===== STATES =====
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
-  const [mode, _setMode] = useState<Mode>("diagnostic");
-  const setMode = (newMode: Mode) => {
+ const [mode, _setMode] = useState<Mode>(() => {
+  if (typeof window !== 'undefined') {
+    return (localStorage.getItem('chat-mode') as Mode) || 'diagnostic';
+  }
+  return 'diagnostic';
+});
+const setMode = (newMode: Mode) => {
+  localStorage.setItem('chat-mode', newMode);  // ✅ tambah ini
   if (newMode !== mode) {
-    // Reset state when switching mode from sidebar
     setMessages([]);
     setSessionId(crypto.randomUUID());
     setDiagnosticData(null);
@@ -282,7 +287,8 @@ const handleDiagnosticComplete = async (
   choice: 'explore' | 'skip',
   arahan: string
 ) => {
-  _setMode("discuss");  // ✅ bypass wrapper, jangan reset session
+_setMode("discuss");
+localStorage.setItem('chat-mode', 'discuss'); // ✅ bypass wrapper, jangan reset session
  
 
 

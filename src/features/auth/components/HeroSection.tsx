@@ -11,7 +11,7 @@ const ChatMock = () => (
     <div style={{ width: "460px", height: "72px", background: "#D93B2B", display: "flex", alignItems: "center", justifyContent: "space-between", padding: "0 24px", boxSizing: "border-box" }}>
       <div style={{ display: "flex", alignItems: "center", gap: "14px" }}>
         <div style={{ width: "44px", height: "44px", background: "rgba(255,255,255,0.9)", borderRadius: "10px", flexShrink: 0, overflow: "hidden", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <img src="/maskot.jpg" width="36" height="36" style={{ objectFit: "contain", display: "block" }} />
+          <img src="/maskot.png" width="46" height="46" style={{ objectFit: "contain", display: "block" }} />
         </div>
         <div>
           <p style={{ margin: 0, fontFamily: "Inter", fontWeight: 700, fontSize: "15px", color: "white", lineHeight: "100%", marginBottom: "7px" }}>Ready</p>

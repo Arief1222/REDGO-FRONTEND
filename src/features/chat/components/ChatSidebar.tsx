@@ -173,12 +173,13 @@ export default function ChatSidebar({
         `}
       >
         {/* Header */}
-        <div className="p-4 pb-3">
-          <h1 className="text-2xl font-bold tracking-tight bg-gradient-to-r from-red-600 to-red-700 bg-clip-text text-transparent">
-            REDGO AI
-          </h1>
-        </div>
-
+      <div className="p-4 pb-3 w-full">
+  <img 
+    src="/ready.png" 
+    alt="REDGO AI Logo" 
+    className="h-9 w-auto object-contain max-w-full"
+  />
+</div>
         {/* New Chat Button */}
         <div className="px-4 pb-3">
           <button

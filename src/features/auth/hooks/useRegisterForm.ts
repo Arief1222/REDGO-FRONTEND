@@ -24,12 +24,14 @@ export const useRegisterForm = () => {
   });
 
   // Register mutation
-  const registerMutation = usePostRegister({
-    onSuccess: () => {
-      toast.success('Registration successful! Please verify your email.');
-      navigate(ROUTES.AUTH.TWO_STEPS_1);
-    },
-  });
+const registerMutation = usePostRegister({
+  onSuccess: (_, variables) => {
+    toast.success('Registrasi berhasil! Cek email kamu untuk kode OTP.');
+    navigate(ROUTES.AUTH.VERIFY_EMAIL, {
+      state: { email: variables.email }, // ← kirim email ke OTP page
+    });
+  },
+})
 
   const onSubmit = useCallback(async (data: RegisterFormData) => {
     try {
