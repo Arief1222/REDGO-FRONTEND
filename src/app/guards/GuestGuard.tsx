@@ -2,28 +2,33 @@ import { ReactNode } from 'react';
 import { Navigate } from 'react-router';
 import { useAuth } from '../auth';
 
-/**
- * Guest Guard Component
- * Redirects authenticated users away from guest-only pages (login, register, etc.)
- */
-
 interface GuestGuardProps {
   children: ReactNode;
 }
 
-export const GuestGuard = ({ children }: GuestGuardProps) => {
-  const { isAuthenticated, isLoading } = useAuth();
+const getRedirectByRole = (roleName?: string): string => {
+  switch (roleName?.toLowerCase()) {
+    case 'user':
+      return '/chat';
+    case 'admin':
+    case 'superadmin':
+      return '/';  // dashboard/sample-page
+    default:
+      return '/chat'; // default ke chat
+  }
+};
 
-  // Don't render anything while checking authentication
+export const GuestGuard = ({ children }: GuestGuardProps) => {
+  const { isAuthenticated, isLoading, user } = useAuth();
+
   if (isLoading) {
     return null;
   }
 
-  // Redirect to dashboard if already authenticated
   if (isAuthenticated) {
-    return <Navigate to="/" replace />;
+    const redirectTo = getRedirectByRole(user?.role?.name);
+    return <Navigate to={redirectTo} replace />;
   }
 
-  // User is not authenticated, allow access to guest pages
   return <>{children}</>;
 };

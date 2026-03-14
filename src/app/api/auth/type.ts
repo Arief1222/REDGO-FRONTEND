@@ -1,5 +1,4 @@
-/** Auth types */
-
+// src/app/api/auth/type.ts
 export interface Permission {
   id: string;
   name: string;
@@ -22,6 +21,9 @@ export interface User {
   is_active: boolean;
   email_verified: boolean;
   email_verified_at: string | null;
+  // ✅ Fields baru untuk premium
+  is_premium: boolean;
+  premium_expires_at: string | null;
   created_at: string;
   updated_at: string;
   role?: Role;

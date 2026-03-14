@@ -37,6 +37,7 @@ export const ROUTES = {
     TWO_STEPS_2: '/auth/two-steps-2',
     MAINTENANCE: '/auth/maintenance',
     ERROR_404: '/auth/404',
+    OAUTH_CALLBACK: '/auth/oauth/callback',
   },
 
   // Error Routes

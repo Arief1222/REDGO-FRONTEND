@@ -27,35 +27,75 @@ const testimonials = [
 const CtaSection = ({ onGoToLogin }: CtaSectionProps) => {
   const ref = useScrollAnimation()
   return (
-    <section ref={ref as React.RefObject<HTMLElement>} style={{ width: "100%", minHeight: "630px", background: "#D93B2B", boxSizing: "border-box", padding: "60px 56px", fontFamily: "Inter, sans-serif", display: "flex", flexDirection: "column", alignItems: "center" }}>
+    <>
+      <style>{`
+        .cta-section-pad {
+          padding: 60px 56px !important;
+        }
+        .cta-title {
+          font-size: 60px !important;
+        }
+        .cta-grid {
+          grid-template-columns: repeat(3, 1fr) !important;
+        }
 
-      <p className="anim-fade-up" style={{ fontFamily: "Inter", fontWeight: 700, fontSize: "20px", color: "white", textAlign: "center", margin: "0 0 16px 0" }}>GET STARTED</p>
+        @media (max-width: 900px) {
+          .cta-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .cta-title {
+            font-size: 44px !important;
+          }
+          .cta-section-pad {
+            padding: 48px 32px !important;
+          }
+        }
 
-      <div className="anim-fade-up delay-100" style={{ fontFamily: "Inter", fontWeight: 400, fontSize: "60px", lineHeight: "100%", textAlign: "center", marginBottom: "48px" }}>
-        <span style={{ color: "#1A1410" }}>Siap </span>
-        <em style={{ fontStyle: "italic", fontWeight: 400, color: "white" }}>thinking</em>
-        <span style={{ color: "#1A1410" }}> bareng Ready?</span>
-      </div>
+        @media (max-width: 560px) {
+          .cta-title {
+            font-size: 34px !important;
+          }
+          .cta-section-pad {
+            padding: 40px 20px !important;
+          }
+          .cta-btn {
+            width: 100% !important;
+          }
+        }
+      `}</style>
+      <section
+        ref={ref as React.RefObject<HTMLElement>}
+        className="cta-section-pad"
+        style={{ width: "100%", minHeight: "630px", background: "#D93B2B", boxSizing: "border-box", padding: "60px 56px", fontFamily: "Inter, sans-serif", display: "flex", flexDirection: "column", alignItems: "center" }}
+      >
+        <p className="anim-fade-up" style={{ fontFamily: "Inter", fontWeight: 700, fontSize: "20px", color: "white", textAlign: "center", margin: "0 0 16px 0" }}>GET STARTED</p>
 
-      <button className="anim-fade-up delay-200 btn-hover" onClick={onGoToLogin} style={{ width: "260px", height: "54px", background: "#FFFBFA", border: "none", borderRadius: "10px", cursor: "pointer", marginBottom: "64px", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <span style={{ fontFamily: "Inter", fontWeight: 700, fontSize: "20px", color: "#D93B2B" }}>Mulai sekarang →</span>
-      </button>
+        <div className="anim-fade-up delay-100 cta-title" style={{ fontFamily: "Inter", fontWeight: 400, fontSize: "60px", lineHeight: "100%", textAlign: "center", marginBottom: "48px" }}>
+          <span style={{ color: "#1A1410" }}>Siap </span>
+          <em style={{ fontStyle: "italic", fontWeight: 400, color: "white" }}>thinking</em>
+          <span style={{ color: "#1A1410" }}> bareng Ready?</span>
+        </div>
 
-      <div style={{ width: "100%", maxWidth: "1328px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
-        {testimonials.map((t, i) => (
-          <div key={t.name} className={`anim-fade-up card-hover delay-${(i+1)*100}`} style={{ background: "#FFFFFF", border: "1px solid #EAD9D4", borderRadius: "14px", padding: "28px 32px", boxSizing: "border-box", minHeight: "260px", display: "flex", flexDirection: "column" }}>
-            <div style={{ flex: 1 }}>
-              <span style={{ display: "inline-flex", alignItems: "center", height: "24px", background: "#F5EAE8", borderRadius: "6px", padding: "0 10px", fontFamily: "Inter", fontWeight: 700, fontSize: "11px", color: "#D93B2B" }}>{t.tag}</span>
+        <button className="anim-fade-up delay-200 btn-hover cta-btn" onClick={onGoToLogin} style={{ width: "260px", height: "54px", background: "#FFFBFA", border: "none", borderRadius: "10px", cursor: "pointer", marginBottom: "64px", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <span style={{ fontFamily: "Inter", fontWeight: 700, fontSize: "20px", color: "#D93B2B" }}>Mulai sekarang →</span>
+        </button>
+
+        <div className="cta-grid" style={{ width: "100%", maxWidth: "1328px", display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "20px" }}>
+          {testimonials.map((t, i) => (
+            <div key={t.name} className={`anim-fade-up card-hover delay-${(i+1)*100}`} style={{ background: "#FFFFFF", border: "1px solid #EAD9D4", borderRadius: "14px", padding: "28px 32px", boxSizing: "border-box", minHeight: "260px", display: "flex", flexDirection: "column" }}>
+              <div style={{ flex: 1 }}>
+                <span style={{ display: "inline-flex", alignItems: "center", height: "24px", background: "#F5EAE8", borderRadius: "6px", padding: "0 10px", fontFamily: "Inter", fontWeight: 700, fontSize: "11px", color: "#D93B2B" }}>{t.tag}</span>
+              </div>
+              <div>
+                <div style={{ fontFamily: "Inter", fontWeight: 400, fontStyle: "italic", fontSize: "15px", color: "#1A1410", lineHeight: "180%", margin: "0 0 16px 0" }}>{t.quote}</div>
+                <p style={{ fontFamily: "Inter", fontWeight: 700, fontSize: "13px", color: "#3D2B24", margin: "0 0 6px 0" }}>{t.name}</p>
+                <p style={{ fontFamily: "Inter", fontWeight: 400, fontSize: "12px", color: "#9A7B73", margin: 0 }}>{t.role}</p>
+              </div>
             </div>
-            <div>
-              <div style={{ fontFamily: "Inter", fontWeight: 400, fontStyle: "italic", fontSize: "15px", color: "#1A1410", lineHeight: "180%", margin: "0 0 16px 0" }}>{t.quote}</div>
-              <p style={{ fontFamily: "Inter", fontWeight: 700, fontSize: "13px", color: "#3D2B24", margin: "0 0 6px 0" }}>{t.name}</p>
-              <p style={{ fontFamily: "Inter", fontWeight: 400, fontSize: "12px", color: "#9A7B73", margin: 0 }}>{t.role}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
+          ))}
+        </div>
+      </section>
+    </>
   )
 }
 

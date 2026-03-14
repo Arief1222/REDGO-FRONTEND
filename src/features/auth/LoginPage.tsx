@@ -6,7 +6,6 @@ import LeftSidebarPart from "./components/LeftSidebarPart"
 import { ROUTES } from "@/app/constants/router"
 import LandingPage from "./LandingPage"
 
-// ── Google Icon ──────────────────────────────────────────────────────────────
 const GoogleIcon = () => (
   <svg width="18" height="18" viewBox="0 0 24 24">
     <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -16,7 +15,6 @@ const GoogleIcon = () => (
   </svg>
 )
 
-// ── Email Icon ────────────────────────────────────────────────────────────────
 const EmailIcon = () => (
   <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
     <rect x="2" y="4" width="20" height="16" rx="2"/>
@@ -24,14 +22,13 @@ const EmailIcon = () => (
   </svg>
 )
 
-// ── Chevron Left ──────────────────────────────────────────────────────────────
 const ChevronLeft = ({ size = 14 }: { size?: number }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
     <path d="M15 18l-6-6 6-6"/>
   </svg>
 )
 
-// ── Step 1: Choose login method ───────────────────────────────────────────────
+
 const StepChoose = ({
   onEmailClick,
   onGoogleClick,
@@ -43,14 +40,10 @@ const StepChoose = ({
   <div style={{ animation: "fadeUp 0.4s ease both" }}>
     <div style={{ marginBottom: "36px" }}>
       <h1 style={{
-        fontSize: "26px",
-        fontWeight: 800,
-        letterSpacing: "-0.8px",
-        color: "#0f0f0f",
-        lineHeight: 1.2,
-        marginBottom: "8px",
+        fontSize: "26px", fontWeight: 800, letterSpacing: "-0.8px",
+        color: "#0f0f0f", lineHeight: 1.2, marginBottom: "8px",
       }}>
-        Selamat datang 
+        Selamat datang
       </h1>
       <p style={{ fontSize: "14px", color: "#9ca3af", fontWeight: 400, lineHeight: 1.5 }}>
         Masuk untuk melanjutkan ke akun Anda
@@ -58,7 +51,6 @@ const StepChoose = ({
     </div>
 
     <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
-      {/* Google */}
       <button
         onClick={onGoogleClick}
         style={googleBtnStyle}
@@ -77,14 +69,12 @@ const StepChoose = ({
         <span>Masuk dengan Google</span>
       </button>
 
-      {/* Divider */}
       <div style={{ display: "flex", alignItems: "center", gap: "14px", margin: "2px 0" }}>
         <div style={{ flex: 1, height: "1px", background: "linear-gradient(to right, transparent, #e5e7eb)" }} />
         <span style={{ color: "#d1d5db", fontSize: "11px", fontWeight: 500, letterSpacing: "0.05em" }}>ATAU</span>
         <div style={{ flex: 1, height: "1px", background: "linear-gradient(to left, transparent, #e5e7eb)" }} />
       </div>
 
-      {/* Email */}
       <button
         onClick={onEmailClick}
         style={emailBtnStyle}
@@ -106,7 +96,6 @@ const StepChoose = ({
   </div>
 )
 
-// ── Step 2: Email + Password form ─────────────────────────────────────────────
 const StepEmailForm = ({ onBack }: { onBack: () => void }) => (
   <div style={{ animation: "fadeUp 0.35s ease both" }}>
     <button onClick={onBack} style={backBtnStyle}>
@@ -116,12 +105,8 @@ const StepEmailForm = ({ onBack }: { onBack: () => void }) => (
 
     <div style={{ marginBottom: "28px" }}>
       <h1 style={{
-        fontSize: "24px",
-        fontWeight: 800,
-        letterSpacing: "-0.7px",
-        color: "#0f0f0f",
-        lineHeight: 1.2,
-        marginBottom: "6px",
+        fontSize: "24px", fontWeight: 800, letterSpacing: "-0.7px",
+        color: "#0f0f0f", lineHeight: 1.2, marginBottom: "6px",
       }}>
         Masuk dengan email
       </h1>
@@ -184,61 +169,27 @@ const StepEmailForm = ({ onBack }: { onBack: () => void }) => (
   </div>
 )
 
-// ── Shared styles ──────────────────────────────────────────────────────────────
 const googleBtnStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "10px",
-  width: "100%",
-  padding: "14px 20px",
-  background: "#fff",
-  border: "none",
-  borderRadius: "14px",
-  cursor: "pointer",
-  fontSize: "14px",
-  fontWeight: 600,
-  color: "#374151",
-  fontFamily: "inherit",
-  transition: "all 0.18s ease",
+  display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
+  width: "100%", padding: "14px 20px", background: "#fff", border: "none",
+  borderRadius: "14px", cursor: "pointer", fontSize: "14px", fontWeight: 600,
+  color: "#374151", fontFamily: "inherit", transition: "all 0.18s ease",
   boxShadow: "0 2px 8px rgba(0,0,0,0.06), 0 0 0 1px rgba(0,0,0,0.06)",
 }
 const emailBtnStyle: React.CSSProperties = {
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "center",
-  gap: "10px",
-  width: "100%",
-  padding: "14px 20px",
-  background: "#e53e3e",
-  border: "none",
-  borderRadius: "14px",
-  cursor: "pointer",
-  fontSize: "14px",
-  fontWeight: 700,
-  color: "#fff",
-  fontFamily: "inherit",
-  transition: "all 0.18s ease",
+  display: "flex", alignItems: "center", justifyContent: "center", gap: "10px",
+  width: "100%", padding: "14px 20px", background: "#e53e3e", border: "none",
+  borderRadius: "14px", cursor: "pointer", fontSize: "14px", fontWeight: 700,
+  color: "#fff", fontFamily: "inherit", transition: "all 0.18s ease",
   boxShadow: "0 4px 16px rgba(229,62,62,0.28)",
 }
 const backBtnStyle: React.CSSProperties = {
-  display: "inline-flex",
-  alignItems: "center",
-  gap: "5px",
-  background: "none",
-  border: "none",
-  cursor: "pointer",
-  color: "#9ca3af",
-  fontSize: "12px",
-  fontWeight: 600,
-  marginBottom: "24px",
-  padding: "6px 0",
-  fontFamily: "inherit",
-  transition: "color 0.15s",
-  letterSpacing: "0.01em",
+  display: "inline-flex", alignItems: "center", gap: "5px", background: "none",
+  border: "none", cursor: "pointer", color: "#9ca3af", fontSize: "12px",
+  fontWeight: 600, marginBottom: "24px", padding: "6px 0", fontFamily: "inherit",
+  transition: "color 0.15s", letterSpacing: "0.01em",
 }
 
-// ── Login View ─────────────────────────────────────────────────────────────────
 type Step = "choose" | "email"
 
 const LoginView = ({ onBack }: { onBack: () => void }) => {
@@ -262,49 +213,79 @@ const LoginView = ({ onBack }: { onBack: () => void }) => {
           from { opacity: 0; }
           to   { opacity: 1; }
         }
+
+        /* ── Mobile: stack vertically, hide right panel ── */
+        .login-left {
+          width: 50%;
+        }
+        .login-right {
+          width: 50%;
+          display: block;
+        }
+        .login-form-pad {
+          padding: 0 72px;
+        }
+        .login-topbar {
+          padding: 28px 48px;
+        }
+        .login-bottom {
+          padding: 20px 48px 28px;
+        }
+
+        @media (max-width: 768px) {
+          .login-left {
+            width: 100% !important;
+          }
+          .login-right {
+            display: none !important;
+          }
+          .login-form-pad {
+            padding: 0 28px !important;
+          }
+          .login-topbar {
+            padding: 20px 24px !important;
+          }
+          .login-bottom {
+            padding: 16px 24px 28px !important;
+          }
+        }
+
+        @media (max-width: 400px) {
+          .login-form-pad {
+            padding: 0 20px !important;
+          }
+          .login-topbar {
+            padding: 16px 20px !important;
+          }
+        }
       `}</style>
 
       {/* ── Left: White Form Panel ── */}
-      <div style={{
-        width: "50%",
+      <div className="login-left" style={{
         background: "#fff",
         display: "flex",
         flexDirection: "column",
         position: "relative",
         flexShrink: 0,
       }}>
-        {/* Subtle background texture */}
         <div style={{
-          position: "absolute",
-          inset: 0,
+          position: "absolute", inset: 0,
           background: "radial-gradient(ellipse at 20% 80%, rgba(229,62,62,0.03) 0%, transparent 60%)",
           pointerEvents: "none",
         }} />
 
         {/* Top bar */}
-        <div style={{
-          padding: "28px 48px",
-          display: "flex",
-          alignItems: "center",
-          position: "relative",
-          zIndex: 1,
+        <div className="login-topbar" style={{
+          display: "flex", alignItems: "center",
+          position: "relative", zIndex: 1,
         }}>
           <button
             onClick={onBack}
             style={{
-              background: "none",
-              border: "none",
-              cursor: "pointer",
-              color: "#9ca3af",
-              fontSize: "12px",
-              fontFamily: "inherit",
-              fontWeight: 600,
-              display: "flex",
-              alignItems: "center",
-              gap: "5px",
-              padding: "6px 0",
-              transition: "color 0.15s",
-              letterSpacing: "0.01em",
+              background: "none", border: "none", cursor: "pointer",
+              color: "#9ca3af", fontSize: "12px", fontFamily: "inherit",
+              fontWeight: 600, display: "flex", alignItems: "center", gap: "5px",
+              padding: "6px 0", transition: "color 0.15s", letterSpacing: "0.01em",
             }}
             onMouseEnter={e => (e.currentTarget.style.color = "#374151")}
             onMouseLeave={e => (e.currentTarget.style.color = "#9ca3af")}
@@ -314,13 +295,12 @@ const LoginView = ({ onBack }: { onBack: () => void }) => {
           </button>
         </div>
 
-        {/* Form area — centered */}
-        <div style={{
+        {/* Form area */}
+        <div className="login-form-pad" style={{
           flex: 1,
           display: "flex",
           flexDirection: "column",
           justifyContent: "center",
-          padding: "0 72px",
           position: "relative",
           zIndex: 1,
         }}>
@@ -328,8 +308,8 @@ const LoginView = ({ onBack }: { onBack: () => void }) => {
             {step === "choose" ? (
               <StepChoose
                 onEmailClick={() => setStep("email")}
-                onGoogleClick={() => {/* trigger google oauth */}}
-                onFacebookClick={() => {/* trigger facebook oauth */}}
+                onGoogleClick={() => {window.location.href = 'http://localhost:3000/core/v1/auth/google'}}
+                onFacebookClick={() => {}}
               />
             ) : (
               <StepEmailForm onBack={() => setStep("choose")} />
@@ -338,8 +318,7 @@ const LoginView = ({ onBack }: { onBack: () => void }) => {
         </div>
 
         {/* Bottom */}
-        <div style={{
-          padding: "20px 48px 28px",
+        <div className="login-bottom" style={{
           textAlign: "center",
           position: "relative",
           zIndex: 1,
@@ -370,54 +349,52 @@ const LoginView = ({ onBack }: { onBack: () => void }) => {
       </div>
 
       {/* ── Right: Brand Panel ── */}
-      <div style={{
+      <div className="login-right" style={{
         width: "50%",
         position: "relative",
         overflow: "visible",
         flexShrink: 0,
       }}>
-        {/* Base gradient background */}
         <div style={{
-          position: "absolute",
-          inset: 0,
+          position: "absolute", inset: 0,
           background: "linear-gradient(145deg, #ffe5e5 0%, #ffc7c7 40%, #ffaaaa 70%, #ff8888 100%)",
         }} />
-
-        {/* Soft radial glow center */}
         <div style={{
-          position: "absolute",
-          inset: 0,
+          position: "absolute", inset: 0,
           background: "radial-gradient(ellipse at 55% 35%, rgba(255,255,255,0.5) 0%, transparent 60%)",
         }} />
-
-        {/* LEFT EDGE: gradient bleeds into white panel — kills the hard line */}
         <div style={{
-          position: "absolute",
-          top: 0,
-          bottom: 0,
-          left: "-80px",
-          width: "160px",
+          position: "absolute", top: 0, bottom: 0, left: "-80px", width: "160px",
           background: "linear-gradient(to right, #fff 0%, #fff8f8 35%, rgba(255,232,232,0.6) 65%, transparent 100%)",
-          zIndex: 2,
-          pointerEvents: "none",
+          zIndex: 2, pointerEvents: "none",
         }} />
-
-        {/* Image — positioned higher */}
         <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
           <LeftSidebarPart />
+          
         </div>
       </div>
     </div>
   )
 }
 
-// ── Main Export ───────────────────────────────────────────────────────────────
 import { useSearchParams } from "react-router"
+import { useEffect } from "react"
+import { useToast } from "@/shared/hooks/useToast";
 
 const LoginPage = () => {
   const [searchParams] = useSearchParams()
   const skipLanding = searchParams.get("direct") === "1"
   const [view, setView] = useState<"landing" | "login">(skipLanding ? "login" : "landing")
+  const toast = useToast()
+
+  useEffect(() => {
+    const error = searchParams.get('error')
+    if (error) {
+      toast.error(decodeURIComponent(error))
+      setView('login')
+    }
+  }, [])
+
   return view === "landing"
     ? <LandingPage onGoToLogin={() => setView("login")} />
     : <LoginView onBack={() => setView("landing")} />

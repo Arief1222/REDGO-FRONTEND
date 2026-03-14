@@ -298,17 +298,15 @@ export default function ChatMessages({ messages, loading, endRef, showTopicButto
 
         {loading && (
           <div className="flex gap-3 items-start">
-            <div className="flex-shrink-0 w-10 h-10 rounded-xl overflow-hidden shadow-sm">
-              <img src={logoImage} alt="Ready" className="w-full h-full object-cover" />
-            </div>
+          
             <div className="flex-1">
-              <div className="bg-white rounded-2xl px-5 py-4 shadow-sm border border-gray-100">
-                <div className="flex gap-1.5">
+              
+                <div className="flex gap-1.5" style={{ paddingLeft: "52px" }}>
                   <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: "0ms" }}></div>
                   <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: "150ms" }}></div>
                   <div className="w-2 h-2 bg-red-500 rounded-full animate-bounce" style={{ animationDelay: "300ms" }}></div>
                 </div>
-              </div>
+     
             </div>
           </div>
         )}

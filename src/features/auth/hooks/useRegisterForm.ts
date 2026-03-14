@@ -24,20 +24,24 @@ export const useRegisterForm = () => {
   });
 
   // Register mutation
-const registerMutation = usePostRegister({
-  onSuccess: (_, variables) => {
-    toast.success('Registrasi berhasil! Cek email kamu untuk kode OTP.');
-    navigate(ROUTES.AUTH.VERIFY_EMAIL, {
-      state: { email: variables.email }, // ← kirim email ke OTP page
-    });
-  },
-})
+  const registerMutation = usePostRegister({
+    onSuccess: (_, variables) => {
+      toast.success('Registrasi berhasil! Cek email kamu untuk kode OTP.');
+      navigate(ROUTES.AUTH.VERIFY_EMAIL, {
+        state: { email: variables.email }, // ← kirim email ke OTP page
+      });
+    },
+  })
 
   const onSubmit = useCallback(async (data: RegisterFormData) => {
     try {
       await registerMutation.mutateAsync(data);
     } catch (error: any) {
-      const errorMessage = error?.response?.data?.message || 'Registration failed. Please try again.';
+      const errorMessage = error?.response?.data?.message
+        || error?.response?.data?.error
+        || 'Registration failed. Please try again.'
+
+      console.log('Error response:', error?.response?.data)  // ← tambah ini
       toast.error(errorMessage);
       console.error('Registration error:', error);
     }

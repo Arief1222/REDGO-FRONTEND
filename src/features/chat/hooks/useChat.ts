@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import { useSendMessage, useSaveDiagnostic, chatApi } from "@/app/api/chat";
+import { useQueryClient } from "@tanstack/react-query";
 import { storageService } from '@/app/services/storageService';
 import type {
   Mode,
@@ -16,28 +17,29 @@ import { useToast } from "@/shared/hooks/useToast";
 
 export function useChat() {
   const toast = useToast();
+  const queryClient = useQueryClient();
 
   // ===== STATES =====
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
- const [mode, _setMode] = useState<Mode>(() => {
-  if (typeof window !== 'undefined') {
-    return (localStorage.getItem('chat-mode') as Mode) || 'diagnostic';
-  }
-  return 'diagnostic';
-});
-const setMode = (newMode: Mode) => {
-  localStorage.setItem('chat-mode', newMode);  // ✅ tambah ini
-  if (newMode !== mode) {
-    setMessages([]);
-    setSessionId(crypto.randomUUID());
-    setDiagnosticData(null);
-    setAttachedFile(null);
-    setEngineTopic(null);
-    setEngineSubMode(null);
-  }
-  _setMode(newMode);
-};
+  const [mode, _setMode] = useState<Mode>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('chat-mode') as Mode) || 'diagnostic';
+    }
+    return 'diagnostic';
+  });
+  const setMode = (newMode: Mode) => {
+    localStorage.setItem('chat-mode', newMode);  // ✅ tambah ini
+    if (newMode !== mode) {
+      setMessages([]);
+      setSessionId(crypto.randomUUID());
+      setDiagnosticData(null);
+      setAttachedFile(null);
+      setEngineTopic(null);
+      setEngineSubMode(null);
+    }
+    _setMode(newMode);
+  };
 
   const [sessionId, setSessionId] = useState("");
   const [loading, setLoading] = useState(false);
@@ -66,9 +68,9 @@ const setMode = (newMode: Mode) => {
   const sendMessageMutation = useSendMessage();
   const saveDiagnosticMutation = useSaveDiagnostic();
   const handleTopicSelect = (topicLabel: string) => {
-  setShowTopicButtons(false); // ✅ sembunyikan buttons
-  sendMessage(topicLabel);
-};
+    setShowTopicButtons(false); // ✅ sembunyikan buttons
+    sendMessage(topicLabel);
+  };
 
 
   // ===== EFFECTS =====
@@ -197,6 +199,7 @@ const setMode = (newMode: Mode) => {
     try {
       // ✅ Ambil token dari storage
       const token = storageService.get<string>('token') || '';
+      abortControllerRef.current = new AbortController();
 
       const response = await fetch(
         `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/core/v1/chat/stream`,
@@ -206,6 +209,7 @@ const setMode = (newMode: Mode) => {
             "Content-Type": "application/json",
             "Authorization": `Bearer ${token}`,
           },
+          signal: abortControllerRef.current.signal,
           body: JSON.stringify({
             session_id: sessionId,
             mode,
@@ -258,6 +262,7 @@ const setMode = (newMode: Mode) => {
       setAttachedFile(null);
 
     } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
       console.error("Stream error:", error);
       setMessages((prev) => prev.filter(
         (m) => m.id !== userMessage.id && m.id !== assistantId
@@ -266,6 +271,7 @@ const setMode = (newMode: Mode) => {
       toast.error("Gagal mengirim pesan. Silakan coba lagi.");
     } finally {
       setLoading(false);
+      queryClient.invalidateQueries({ queryKey: ['chat-history'] }); // ← tambah ini
     }
   };
 
@@ -275,57 +281,56 @@ const setMode = (newMode: Mode) => {
     setSessionId(crypto.randomUUID());
     setDiagnosticData(null);
     setAttachedFile(null);
-
-    // Clear mode-specific states for fresh start
     setEngineTopic(null);
     setEngineSubMode(null);
+    queryClient.invalidateQueries({ queryKey: ['chat-history'] }); // ← tambah ini
   };
 
-// AFTER
-const handleDiagnosticComplete = async (
-  data: DiagnosticData,
-  choice: 'explore' | 'skip',
-  arahan: string
-) => {
-_setMode("discuss");
-localStorage.setItem('chat-mode', 'discuss'); // ✅ bypass wrapper, jangan reset session
- 
+  // AFTER
+  const handleDiagnosticComplete = async (
+    data: DiagnosticData,
+    choice: 'explore' | 'skip',
+    arahan: string
+  ) => {
+    _setMode("discuss");
+    localStorage.setItem('chat-mode', 'discuss'); // ✅ bypass wrapper, jangan reset session
 
 
-  // ✅ Cek apakah dari "Mulai Diskusi" di landing (data kosong)
-  const isFromDiscussButton = !data.businessStage;
 
-  if (isFromDiscussButton) {
-    const welcomeMessage: ChatMessage = {
-      id: Date.now().toString(),
-      role: "assistant",
-      content: "Hello, Apa yang ingin didiskusikan?",
-    };
-    setMessages([welcomeMessage]);
-    setShowTopicButtons(true); // ✅ tampilkan topic buttons
-    return;
-  }
+    // ✅ Cek apakah dari "Mulai Diskusi" di landing (data kosong)
+    const isFromDiscussButton = !data.businessStage;
 
-  // Save diagnostic (hanya kalau data lengkap)
-  if (data.businessStage && data.teamSize && data.position && data.challenges && data.situation && data.perceivedProblem && data.confidence) {
-    try {
-      await saveDiagnosticMutation.mutateAsync({
-        session_id: sessionId,
-        business_stage: data.businessStage,
-        team_size: data.teamSize,
-        position: data.position,
-        challenges: data.challenges,
-        situation: data.situation,
-        perceived_problem: data.perceivedProblem,
-        confidence: data.confidence,
-      });
-    } catch (error) {
-      console.error("❌ Failed to save diagnostic:", error);
+    if (isFromDiscussButton) {
+      const welcomeMessage: ChatMessage = {
+        id: Date.now().toString(),
+        role: "assistant",
+        content: "Hello, Apa yang ingin didiskusikan?",
+      };
+      setMessages([welcomeMessage]);
+      setShowTopicButtons(true); // ✅ tampilkan topic buttons
+      return;
     }
-  }
 
-      _setMode("discuss");  // ✅ sama di bawah
-    
+    // Save diagnostic (hanya kalau data lengkap)
+    if (data.businessStage && data.teamSize && data.position && data.challenges && data.situation && data.perceivedProblem && data.confidence) {
+      try {
+        await saveDiagnosticMutation.mutateAsync({
+          session_id: sessionId,
+          business_stage: data.businessStage,
+          team_size: data.teamSize,
+          position: data.position,
+          challenges: data.challenges,
+          situation: data.situation,
+          perceived_problem: data.perceivedProblem,
+          confidence: data.confidence,
+        });
+      } catch (error) {
+        console.error("❌ Failed to save diagnostic:", error);
+      }
+    }
+
+    _setMode("discuss");  // ✅ sama di bawah
+
 
     // const welcomeMessage: ChatMessage = {
     //   id: Date.now().toString(),
@@ -335,51 +340,53 @@ localStorage.setItem('chat-mode', 'discuss'); // ✅ bypass wrapper, jangan rese
     // };
 
     // setMessages([welcomeMessage]);
-     if (choice === 'explore' && arahan) {
-    await sendMessage(arahan);
-  }
+    if (choice === 'explore' && arahan) {
+      await sendMessage(arahan);
+    }
   };
 
   // ✅ Handle Engine flow completion - load messages from backend
-const handleEngineComplete = async (
-  analysis: string,
-  topic: EngineTopic,
-  subMode: EngineSubMode,
-  answers: Record<string, string>
-) => {
-  const currentSessionId = sessionIdRef.current; // ✅ capture dulu sebelum apapun
-  console.log("✅ sessionId yang dipakai:", currentSessionId);
+  const handleEngineComplete = async (
+    analysis: string,
+    topic: EngineTopic,
+    subMode: EngineSubMode,
+    answers: Record<string, string>
+  ) => {
+    const currentSessionId = sessionIdRef.current; // ✅ capture dulu sebelum apapun
+    console.log("✅ sessionId yang dipakai:", currentSessionId);
 
-  setEngineTopic(topic);
-  setEngineSubMode(subMode);
-  setMode("engine");
+    setEngineTopic(topic);
+    setEngineSubMode(subMode);
+    setMode("engine");
 
-  const assistantId = `${Date.now()}-assistant`;
-  setMessages([{
-    id: assistantId,
-    role: "assistant" as const,
-    content: "",
-  }]);
+    const assistantId = `${Date.now()}-assistant`;
+    setMessages([{
+      id: assistantId,
+      role: "assistant" as const,
+      content: "",
+    }]);
 
-  setLoading(true);
+    setLoading(true);
 
-  try {
-    const token = storageService.get<string>('token') || '';
-    const response = await fetch(
-      `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/core/v1/engine/analyze/stream`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          session_id: currentSessionId, // ✅ pakai captured value
-          topic,
-          sub_mode: subMode,
-        }),
-      }
-    );
+    try {
+      const token = storageService.get<string>('token') || '';
+      abortControllerRef.current = new AbortController();
+      const response = await fetch(
+        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/core/v1/engine/analyze/stream`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`,
+          },
+          signal: abortControllerRef.current.signal,
+          body: JSON.stringify({
+            session_id: currentSessionId, // ✅ pakai captured value
+            topic,
+            sub_mode: subMode,
+          }),
+        }
+      );
 
       if (!response.ok) throw new Error(`HTTP error: ${response.status}`);
 
@@ -414,10 +421,12 @@ const handleEngineComplete = async (
         }
       }
     } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
       console.error("Stream error:", error);
       toast.error("Gagal membuat analysis.");
     } finally {
       setLoading(false);
+      queryClient.invalidateQueries({ queryKey: ['chat-history'] }); // ← tambah ini
     }
   };
   // ✅ loadChatSession with Engine mode support
@@ -442,21 +451,21 @@ const handleEngineComplete = async (
       const lastBackendMsg = res.data.messages[res.data.messages.length - 1];
 
       if (
-  lastBackendMsg?.Mode &&
-  ["diagnostic", "discuss", "engine", "explorer"].includes(lastBackendMsg.Mode)
-) {
-  // ✅ Diagnostic history harus ditampilkan sebagai discuss
-  // karena DiagnosticFlow adalah onboarding flow, bukan chat view
-  const resolvedMode = lastBackendMsg.Mode === "diagnostic" ? "discuss" : lastBackendMsg.Mode as Mode;
-  setMode(resolvedMode);
+        lastBackendMsg?.Mode &&
+        ["diagnostic", "discuss", "engine", "explorer"].includes(lastBackendMsg.Mode)
+      ) {
+        // ✅ Diagnostic history harus ditampilkan sebagai discuss
+        // karena DiagnosticFlow adalah onboarding flow, bukan chat view
+        const resolvedMode = lastBackendMsg.Mode === "diagnostic" ? "diagnostic" : lastBackendMsg.Mode as Mode;
+        setMode(resolvedMode);
 
-  if (lastBackendMsg.Mode === 'engine') {
-    if (lastBackendMsg.Topic) setEngineTopic(lastBackendMsg.Topic as EngineTopic);
-    if (lastBackendMsg.SubMode) setEngineSubMode(lastBackendMsg.SubMode as EngineSubMode);
-  }
-} else {
-  setMode("discuss");
-}
+        if (lastBackendMsg.Mode === 'engine') {
+          if (lastBackendMsg.Topic) setEngineTopic(lastBackendMsg.Topic as EngineTopic);
+          if (lastBackendMsg.SubMode) setEngineSubMode(lastBackendMsg.SubMode as EngineSubMode);
+        }
+      } else {
+        setMode("discuss");
+      }
 
       // Map messages
       const formattedMessages: ChatMessage[] = res.data.messages.map(
@@ -486,6 +495,22 @@ const handleEngineComplete = async (
     }
   };
 
+  const handleDeleteSession = (deletedSessionId: string) => {
+    // kalau yang didelete adalah sesi yang sedang aktif, reset chat
+    if (deletedSessionId === sessionId) {
+      setMessages([]);
+      setSessionId(crypto.randomUUID());
+      setDiagnosticData(null);
+      setAttachedFile(null);
+      setEngineTopic(null);
+      setEngineSubMode(null);
+    }
+  };
+  const abortControllerRef = useRef<AbortController | null>(null);
+
+  const stopGeneration = () => {
+    abortControllerRef.current?.abort();
+  };
   // ===== RETURN =====
   return {
     // States
@@ -495,7 +520,7 @@ const handleEngineComplete = async (
     loading,
     diagnosticData,
     showTopicButtons,
-handleTopicSelect,
+    handleTopicSelect,
 
     // ✅ Engine mode states
     engineTopic,
@@ -514,6 +539,7 @@ handleTopicSelect,
     newChat,
     handleDiagnosticComplete,
     handleEngineComplete,
+    stopGeneration,
 
     // Attachment handlers
     handleFileAttach,
@@ -526,6 +552,8 @@ handleTopicSelect,
     // Chat history
     loadChatSession,
     sessionId,
+    handleDeleteSession,
+
 
     // Voice recorder
     isRecording: voiceRecorder.isRecording,

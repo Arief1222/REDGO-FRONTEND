@@ -1,50 +1,71 @@
-// src/app/chat/components/EngineFlow.tsx - FIXED: Save analysis to backend
-
 import { useState } from 'react';
 import EngineTopicSelector from './EngineTopicSelector';
 import EngineSubModeSelector from './EngineSubModeSelector';
 import EngineQuestionnaire from './EngineQuestionnaire';
-import {
-  useEngineQuestions,
-  useSaveEngineAnswers,
-  // useSendMessage, // ✅ ADD THIS
-} from '@/app/api/chat';
+import { useEngineQuestions, useSaveEngineAnswers } from '@/app/api/chat';
 import type { EngineTopic, EngineSubMode, EngineAnswers } from '@/app/api/chat';
 import { useToast } from '@/shared/hooks/useToast';
+import { usePaymentStatus } from '@/app/api/payment/usePaymentApi';
+import { useAuth } from '@/app/auth';
+import { isAdminRole } from '../hooks/usePremium';
 
 type Step = 'topic' | 'submode' | 'questionnaire';
 
+const FULLY_LOCKED_TOPICS: EngineTopic[] = [
+  'product_development',
+  'market_analyst',
+  'content_plan',
+];
+
+const ANALYSIS_LOCKED_TOPICS: EngineTopic[] = [
+  'marketing',
+];
+
 interface Props {
   sessionId: string;
-  onComplete: (analysis: string, topic: EngineTopic, subMode: EngineSubMode, answers: EngineAnswers) => void;
+  onComplete: (analysis: string, topic: EngineTopic, subMode: EngineSubMode, answers: EngineAnswers) => Promise<void>;
+  onLockedTopic?: (topic: EngineTopic) => void;
 }
 
-export default function EngineFlow({ sessionId, onComplete }: Props) {
+export default function EngineFlow({ sessionId, onComplete, onLockedTopic }: Props) {
   const toast = useToast();
   const [step, setStep] = useState<Step>('topic');
   const [selectedTopic, setSelectedTopic] = useState<EngineTopic | null>(null);
   const [selectedSubMode, setSelectedSubMode] = useState<EngineSubMode | null>(null);
 
-  // Fetch questions when topic and submode are selected
-  const {
-    data: questionsData,
-    isLoading: isLoadingQuestions,
-  } = useEngineQuestions(
+  // ✅ Semua hooks di atas sebelum dipakai
+  const { user } = useAuth();
+  const { data: paymentStatus } = usePaymentStatus();
+  const isPremium = paymentStatus?.is_premium ?? false;
+  const isAdmin = isAdminRole(user?.role?.name);
+  const bypassLock = isAdmin || isPremium;
+
+  const { data: questionsData, isLoading: isLoadingQuestions } = useEngineQuestions(
     selectedTopic || '',
     selectedSubMode || '',
     !!selectedTopic && !!selectedSubMode
   );
 
   const saveAnswersMutation = useSaveEngineAnswers();
-  // const generateAnalysisMutation = useGenerateEngineAnalysis();
-  // const sendMessageMutation = useSendMessage(); // ✅ ADD THIS
 
   const handleTopicSelect = (topic: EngineTopic) => {
+    if (!bypassLock && FULLY_LOCKED_TOPICS.includes(topic)) {
+      onLockedTopic?.(topic);
+      return;
+    }
     setSelectedTopic(topic);
     setStep('submode');
   };
 
   const handleSubModeSelect = (subMode: EngineSubMode) => {
+    if (!bypassLock) {
+      const isAnalysis = (subMode as string) === 'analysis';
+      const analysisOnlyLocked = isAnalysis && selectedTopic && ANALYSIS_LOCKED_TOPICS.includes(selectedTopic);
+      if (analysisOnlyLocked) {
+        onLockedTopic?.(selectedTopic!);
+        return;
+      }
+    }
     setSelectedSubMode(subMode);
     setStep('questionnaire');
   };
@@ -62,7 +83,6 @@ export default function EngineFlow({ sessionId, onComplete }: Props) {
 
   const handleSubmitAnswers = async (answers: EngineAnswers) => {
     if (!selectedTopic || !selectedSubMode) return;
-
     try {
       await saveAnswersMutation.mutateAsync({
         session_id: sessionId,
@@ -70,16 +90,13 @@ export default function EngineFlow({ sessionId, onComplete }: Props) {
         sub_mode: selectedSubMode,
         answers,
       });
-
-      // ✅ Langsung pindah, TANPA streaming di sini
-      onComplete("", selectedTopic, selectedSubMode, answers); // ✅ pass answers
-
+      await onComplete('', selectedTopic, selectedSubMode, answers);
     } catch (error) {
       console.error('Failed to submit answers:', error);
       toast.error('Gagal membuat analysis. Silakan coba lagi.');
     }
   };
-  // Show loading when fetching questions
+
   if (step === 'questionnaire' && isLoadingQuestions) {
     return (
       <div className="flex items-center justify-center h-full">
@@ -91,7 +108,6 @@ export default function EngineFlow({ sessionId, onComplete }: Props) {
     );
   }
 
-  // Render current step
   return (
     <div className="h-full overflow-y-auto">
       {step === 'topic' && (
