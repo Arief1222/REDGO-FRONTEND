@@ -1,5 +1,5 @@
 // src/app/chat/components/ChatSidebar.tsx
-import { Plus, ChevronDown, Trash2, Loader2, MoreHorizontal, Pencil, LogOut, X, PanelLeftClose, PanelLeftOpen, MessageSquare } from "lucide-react";
+import { Plus, ChevronDown, Trash2, Loader2, MoreHorizontal, Pencil, LogOut, X, PanelLeftClose, PanelLeftOpen } from "lucide-react";
 import type { Mode } from "@/app/api/chat";
 import { useState, useEffect } from "react";
 import { useChatHistory, useDeleteSession, useUpdateSessionTitle } from "@/app/api/chat";
@@ -7,6 +7,8 @@ import { useToast } from "@/shared/hooks/useToast";
 import { useGetProfile } from "@/app/api/auth";
 import { storageService } from "@/app/services/storageService";
 import { useQueryClient } from "@tanstack/react-query";
+// import { useDarkMode } from '../hooks/useDarkMode';
+// import { Moon, Sun } from 'lucide-react';
 
 type Props = {
   open: boolean;
@@ -46,7 +48,6 @@ export default function ChatSidebar({
   onDeleteSession,
   currentSessionId,
   isPremium,
-  remainingQuota,
   onUpgrade,
 
 }: Props) {
@@ -58,6 +59,7 @@ export default function ChatSidebar({
   const [modalTitle, setModalTitle] = useState("");
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+  // const { isDark, toggle } = useDarkMode();
 
 
   const toast = useToast();
@@ -171,8 +173,8 @@ export default function ChatSidebar({
 
       <aside className={`
         fixed md:sticky top-0 left-0 z-50
-        h-screen bg-white border-r border-gray-200
-        flex flex-col shadow-xl md:shadow-none
+        h-screen flex flex-col shadow-xl md:shadow-none
+        bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-700
         transition-all duration-300 ease-in-out
         ${open ? "translate-x-0" : "-translate-x-full md:translate-x-0"}
         ${collapsed ? "md:w-[60px]" : "w-[280px]"}
@@ -251,6 +253,15 @@ export default function ChatSidebar({
                 <X className="w-5 h-5" />
               </button>
               {/* Collapse — desktop */}
+
+              {/* <button
+                onClick={toggle}
+                className="hidden md:flex p-1.5 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors text-gray-500"
+                title={isDark ? "Light mode" : "Dark mode"}
+              >
+                {isDark ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
+              </button> */}
+
               <button
                 onClick={onToggleCollapse}
                 className="hidden md:flex p-1.5 rounded-lg hover:bg-gray-100 transition-colors text-gray-500"
@@ -422,8 +433,8 @@ export default function ChatSidebar({
                     <button
                       onClick={isPremium ? undefined : onUpgrade}
                       className={`text-xs font-semibold px-2 py-0.5 rounded-full transition-colors ${isPremium
-                          ? "bg-amber-100 text-amber-600 cursor-default"
-                          : "bg-gray-100 text-gray-500 hover:bg-amber-100 hover:text-amber-600 cursor-pointer"
+                        ? "bg-amber-100 text-amber-600 cursor-default"
+                        : "bg-gray-100 text-gray-500 hover:bg-amber-100 hover:text-amber-600 cursor-pointer"
                         }`}
                     >
                       {isPremium ? "Premium" : "Free"}

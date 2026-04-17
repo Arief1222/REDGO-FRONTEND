@@ -92,7 +92,7 @@ export default function EngineQuestionnaire({
       </div>
 
       {/* Question Card */}
-      <div className="bg-white rounded-2xl border-2 border-gray-200 p-8 mb-6 shadow-sm">
+      <div className="bg-white dark:bg-gray-800 rounded-2xl border-2 border-gray-200 p-8 mb-6 shadow-sm">
         <div className="flex items-start gap-3 mb-4">
           <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-red-600 text-white flex items-center justify-center font-bold text-sm">
             {currentQuestion.order}
@@ -184,7 +184,7 @@ export default function EngineQuestionnaire({
                   ? 'bg-red-600 text-white'
                   : answers[q.key]?.trim()
                     ? 'bg-green-100 text-green-700 border border-green-300'
-                    : 'bg-white text-gray-600 border border-gray-300'
+                    : 'bg-white dark:bg-gray-800 text-gray-600 border border-gray-300'
                 }
               `}
             >

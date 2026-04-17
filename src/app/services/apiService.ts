@@ -19,7 +19,7 @@ class ApiService {
   private refreshSubscribers: ((token: string) => void)[] = [];
 
   constructor() {
-    this.apiUrl = import.meta.env.VITE_API_URL || 'http://localhost:3000';
+    this.apiUrl = import.meta.env.VITE_API_URL || 'https://api.airedgo.com';
 
     this.api = axios.create({
       baseURL: this.apiUrl,

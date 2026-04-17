@@ -2,6 +2,7 @@
 import NavBar from "./components/NavBar"
 import HeroSection from "./components/HeroSection"
 import FeaturesSection from "./components/FeaturesSection"
+import PricingSection from "./components/PricingSection"  // ✅ NEW
 import CtaSection from "./components/CtaSection"
 import FooterSection from "./components/FooterSection"
 
@@ -33,16 +34,19 @@ const LandingPage = ({ onGoToLogin }: LandingPageProps) => (
     {/* NAVBAR */}
     <NavBar onGoToLogin={onGoToLogin} />
 
-    {/* HERO — komponen terpisah di components/HeroSection.tsx */}
+    {/* HERO */}
     <HeroSection onGoToLogin={onGoToLogin} />
 
-    {/* FEATURES — komponen terpisah di components/FeaturesSection.tsx */}
+    {/* FEATURES */}
     <FeaturesSection />
 
-    {/* CTA + TESTIMONIALS — komponen terpisah di components/CtaSection.tsx */}
+    {/* PRICING ✅ */}
+    <PricingSection onGoToLogin={onGoToLogin} />
+
+    {/* CTA + TESTIMONIALS */}
     <CtaSection onGoToLogin={onGoToLogin} />
 
-    {/* FOOTER — komponen terpisah di components/FooterSection.tsx */}
+    {/* FOOTER */}
     <FooterSection />
 
   </div>

@@ -1,15 +1,15 @@
-import Logo from "@/shared/components/layouts/full/shared/logo/Logo"
+
 import { Button } from '@/shared/components/theme-ui'
 import { Link } from "react-router"
 import AuthForgotPassword from "./components/forms/AuthForgotPassword"
 import LeftSidebarPart from "./components/LeftSidebarPart"
 import { ROUTES } from "@/app/constants"
 
-const ChevronLeft = ({ size = 14 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M15 18l-6-6 6-6"/>
-  </svg>
-)
+// const ChevronLeft = ({ size = 14 }: { size?: number }) => (
+//   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+//     <path d="M15 18l-6-6 6-6"/>
+//   </svg>
+// )
 
 const ForgotPasswordPage = () => {
   return (
@@ -89,12 +89,12 @@ const ForgotPasswordPage = () => {
   )
 }
 
-const backBtnStyle: React.CSSProperties = {
-  display: "inline-flex", alignItems: "center", gap: "5px",
-  background: "none", border: "none", cursor: "pointer",
-  color: "#9ca3af", fontSize: "12px", fontWeight: 600,
-  fontFamily: "inherit", transition: "color 0.15s",
-}
+// const backBtnStyle: React.CSSProperties = {
+//   display: "inline-flex", alignItems: "center", gap: "5px",
+//   background: "none", border: "none", cursor: "pointer",
+//   color: "#9ca3af", fontSize: "12px", fontWeight: 600,
+//   fontFamily: "inherit", transition: "color 0.15s",
+//}
 const outlineBtnStyle: React.CSSProperties = {
   display: "flex", alignItems: "center", justifyContent: "center",
   width: "100%", padding: "13px", fontSize: "14px", fontWeight: 600,

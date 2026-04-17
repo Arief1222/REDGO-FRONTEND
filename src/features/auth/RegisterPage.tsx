@@ -268,7 +268,7 @@ const RegisterPage = () => {
             {step === "choose" ? (
               <StepChoose
                 onEmailClick={() => setStep("email")}
-                onGoogleClick={() => {window.location.href = 'http://localhost:3000/core/v1/auth/google'}}
+                onGoogleClick={() => {window.location.href = 'https://api.airedgo.com/core/v1/auth/google'}}
               />
             ) : (
               <StepRegisterForm onBack={() => setStep("choose")} />

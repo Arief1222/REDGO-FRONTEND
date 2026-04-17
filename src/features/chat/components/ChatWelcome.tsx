@@ -4,7 +4,7 @@ interface ChatWelcomeProps {
   onPromptClick: (prompt: string) => void;
 }
 
-export function ChatWelcome({ onPromptClick }: ChatWelcomeProps) {
+export function ChatWelcome({}: ChatWelcomeProps) {
   return (
     <div className="flex flex-col items-center justify-center text-center">
       {/* Logo & Title */}

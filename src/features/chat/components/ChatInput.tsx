@@ -77,7 +77,7 @@ export default function ChatInput({
 
         {/* Clarify Panel */}
         {hasClarify && (
-          <div className="mb-2 bg-white border border-gray-100 rounded-2xl shadow-md overflow-hidden">
+          <div className="mb-2 bg-white dark:bg-gray-800 border border-gray-100 rounded-2xl shadow-md overflow-hidden">
             <div className="flex items-center justify-between px-4 py-2.5 border-b border-gray-100">
               <p className="text-sm font-medium text-gray-700">{clarifyQuestion}</p>
               <button onClick={onClarifyDismiss} className="text-gray-400 hover:text-gray-600 ml-3 flex-shrink-0">
@@ -130,7 +130,7 @@ export default function ChatInput({
         )}
 
         {/* ✅ Main floating input — no border box, just subtle bg + shadow */}
-        <div className="relative bg-white rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_24px_rgba(0,0,0,0.12)] transition-shadow duration-200">
+        <div className="relative bg-white dark:bg-gray-800 rounded-3xl shadow-[0_2px_16px_rgba(0,0,0,0.08)] hover:shadow-[0_4px_24px_rgba(0,0,0,0.12)] transition-shadow duration-200">
 
           {/* Top row: textarea */}
           <textarea

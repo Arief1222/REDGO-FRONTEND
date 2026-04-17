@@ -114,6 +114,9 @@ export type SessionMessagesResponse = {
   session_id: string;
   messages: BackendChatMessage[];
   total: number;
+  session_mode: string; 
+   topic?: string;     // ✅ tambah
+  sub_mode?: string;
 };
 
 // ✅ NEW: Engine mode types

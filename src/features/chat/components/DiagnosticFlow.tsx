@@ -57,10 +57,10 @@ export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
               options={["Baru mulai berjalan (≤ 6 bulan)", "> 6 bulan tetapi belum stabil", "Sudah stabil, namun pertumbuhan melambat", "Sedang bertumbuh, tetapi terasa sulit dikendalikan", "Sedang mengalami penurunan atau tekanan yang signifikan"]}
               selected={data.businessStage} onSelect={v => updateData('businessStage', v)} />
             <QuestionBlock number={2} question="Berapa orang yang terlibat?"
-              options={["Sendiri", "2–5 orang", "6–10 orang", "11–20 orang", "20 +"]}
+              options={["Sendiri", "2–5 orang", "6–10 orang", "11–20 orang", "Lebih dari 20 orang"]}
               selected={data.teamSize} onSelect={v => updateData('teamSize', v)} />
             <QuestionBlock number={3} question="Mana yang menggambarkan posisi Anda saat ini?"
-              options={["Hampir semua masih dikerjakan sendiri", "Mengelola tim, tapi masih ikut eksekusi", "Fokus di pengambilan keputusan", "Terjebak urusan harian / pemadam kebakaran"]}
+              options={["Sebagian besar operasional masih dikerjakan sendiri", "Mengelola tim, tetapi masih ikut serta dalam eksekusi", "Berfokus pada pengambilan keputusan dan arah bisnis", "Sistem seting bermasalah dan harus ikut turun tangan masalah harian"]}
               selected={data.position} onSelect={v => updateData('position', v)} />
           </StepShell>
         );
@@ -84,7 +84,7 @@ export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
             onNext={() => setStep('analyzing')} canNext={!!(data.perceivedProblem && data.confidence)} nextLabel="Selesai & Analisis"
           >
             <QuestionBlock number={6} question="Menurut Anda, apa yang saat ini menjadi masalah utama?"
-              options={["Penjualan / pemasaran", "Tim / kepemimpinan", "Operasional / sistem kerja", "Keuangan / arus kas", "Arah / prioritas bisnis", "Jujur, saya belum tahu"]}
+              options={["Penjualan / pemasaran", "Struktur tim & kemampuan eksekusi", "Beban pengambilan keputusan pada saya", "Operasional / alur kerja yang tidak stabil", "Keuangan / arus kas", "Arah / prioritas bisnis", "Hasil kerja tidak sebanding dengan upaya","Belum dapat mengidentifikasinya dengan jelas"]}
               selected={data.perceivedProblem} onSelect={v => updateData('perceivedProblem', v)} />
             {data.perceivedProblem && (
               <QuestionBlock number={7} question="Seberapa yakin dengan jawaban no.6?"
@@ -109,7 +109,7 @@ export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
             onBack={goToLanding} showPrev={true} onPrev={goPrev}
             onNext={() => setStep('direction')} canNext={true} nextLabel="Lanjut ke Arahan"
           >
-            <div className="bg-white border-2 border-red-200 rounded-2xl p-6">
+            <div className="bg-white dark:bg-gray-800 border-2 border-red-200 rounded-2xl p-6">
               <div className="flex items-start gap-4">
                 <div className="w-10 h-10 bg-red-100 rounded-xl flex items-center justify-center flex-shrink-0">
                   <Lightbulb className="w-5 h-5 text-red-600" />
@@ -132,7 +132,7 @@ export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
   };
 
   return (
-    <div className="h-full overflow-y-auto bg-gradient-to-br from-gray-50 to-gray-100">
+    <div className="h-full overflow-y-auto bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-900">
       <AnimatePresence mode="wait">
         <motion.div
           key={step}
@@ -188,7 +188,7 @@ export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
               <button
                 onClick={onPrev}
                 type="button"
-                className="flex items-center justify-center gap-2 px-5 py-3.5 bg-white border-2 border-gray-200 text-gray-600 rounded-xl hover:border-gray-300 hover:text-gray-800 transition-all font-medium text-sm whitespace-nowrap"
+                className="flex items-center justify-center gap-2 px-5 py-3.5 bg-white dark:bg-gray-800 border-2 border-gray-200 text-gray-600 rounded-xl hover:border-gray-300 hover:text-gray-800 transition-all font-medium text-sm whitespace-nowrap"
               >
                 <ArrowLeft className="w-4 h-4" />
                 Sebelumnya
@@ -233,7 +233,7 @@ export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
           <div className="text-xs text-gray-400 mb-3">Dipilih: {data.challenges?.length ?? 0} / 3</div>
           <div className="space-y-2">
             {[
-              "Penjualan tidak konsisten",
+              "Pendapatan tidak konsisten dan sulit diprediksi",
               "Tim belum bisa bekerja mandiri tanpa banyak arahan",
               "Terlalu banyak keputusan yang harus ditangani sendiri",
               "Ada uang masuk, namun ruang gerak terasa sempit",
@@ -249,7 +249,7 @@ export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
                   onClick={() => toggleChallenge(challenge)}
                   disabled={isDisabled}
                   className={`w-full text-left px-4 py-3 rounded-xl transition-all border-2 text-sm
-                  ${isSelected ? 'bg-red-50 border-red-300 text-red-900' : 'bg-white border-gray-200 hover:border-gray-300 text-gray-700'}
+                  ${isSelected ? 'bg-red-50 border-red-300 text-red-900' : 'bg-white dark:bg-gray-800 border-gray-200 hover:border-gray-300 text-gray-700'}
                   ${isDisabled ? 'opacity-40 cursor-not-allowed' : ''}`}
                 >
                   <div className="flex items-center gap-3">
@@ -267,7 +267,7 @@ export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
         <QuestionBlock
           number={5}
           question="Mana yang menggambarkan situasi bisnis saat ini?"
-          options={["Tim sudah kerja keras, tapi hasil tidak sebanding", "Masalah yang sama terus terulang", "Bisnis bertumbuh, namun menambah masalah internal", "Takut salah ambil keputusan", "Saya merasa jadi bottleneck bisnis"]}
+          options={["Tim bekerja keras, tetapi hasil belum sebanding dengan upaya", "Setiap ada peningkatan, muncul tekanan atau kendala baru", "Bisnis bertumbuhn, namun koordinasi dan kontrol semakin sulit","Banyak keputusan penting bergantung pada saya", "Arah dan prioritas bisnis sering berubah atau tidak konsisten"]}
           selected={data.situation}
           onSelect={v => updateData('situation', v)}
         />
@@ -368,7 +368,7 @@ export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
               initial={{ opacity: 0, y: 10 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05, duration: 0.4 }}
-              className="inline-flex items-center gap-2 bg-red-50 text-red-700 px-4 py-2 rounded-full text-sm font-medium mb-6"
+              className="inline-flex items-center gap-2 bg-red-50 dark:bg-red-900/20 text-red-700 dark:text-red-400 px-4 py-2 rounded-full text-sm font-medium mb-6"
             >
               <Lightbulb className="w-4 h-4" />
               Mode: Probe
@@ -405,7 +405,7 @@ export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.25, duration: 0.45 }}
               style={{ willChange: "transform" }}
-              className="text-xl text-gray-600 mb-8"
+             className="text-xl text-gray-600 dark:text-gray-400 mb-8"
             >
               Diskusikan ide, strategi, dan arah bisnis.
               Ready akan bantu mencari apa yang sebenarnya bermasalah.
@@ -436,7 +436,7 @@ export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.97 }}
               onClick={onSkip}
-              className="w-full max-w-md mx-auto flex items-center justify-center gap-3 px-8 py-4 bg-white text-gray-700 rounded-xl border-2 border-gray-200 hover:bg-gray-50 font-medium"
+              className="w-full max-w-md mx-auto flex items-center justify-center gap-3 px-8 py-4 bg-white dark:bg-gray-800 text-gray-700 rounded-xl border-2 border-gray-200 hover:bg-gray-50 font-medium"
             >
               <MessageCircle className="w-5 h-5" />
               Mulai diskusi
@@ -466,7 +466,7 @@ export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
                 show: { opacity: 1, y: 0 }
               }}
               transition={{ duration: 0.45 }}
-              className="bg-white p-6 rounded-xl border border-gray-200"
+              className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200"
             >
               <div className="text-sm font-semibold text-gray-900 mb-2">
                 Diagnose business issues
@@ -482,7 +482,7 @@ export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
                 show: { opacity: 1, y: 0 }
               }}
               transition={{ duration: 0.45 }}
-              className="bg-white p-6 rounded-xl border border-gray-200"
+              className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200"
             >
               <div className="text-sm font-semibold text-gray-900 mb-2">
                 Structured thinking
@@ -498,7 +498,7 @@ export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
                 show: { opacity: 1, y: 0 }
               }}
               transition={{ duration: 0.45 }}
-              className="bg-white p-6 rounded-xl border border-gray-200"
+              className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-200"
             >
               <div className="text-sm font-semibold text-gray-900 mb-2">
                 Built for founders
@@ -566,7 +566,7 @@ export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
           <div className="space-y-3">
             <button onClick={() => onNext('explore')} className="w-full flex items-center justify-between px-6 py-5 bg-gradient-to-r from-red-600 to-red-700 text-white rounded-xl hover:from-red-700 hover:to-red-800 transition-all shadow-lg">
               <div className="flex items-center gap-4">
-                <div className="w-9 h-9 bg-white/20 rounded-lg flex items-center justify-center text-lg">🔍</div>
+                <div className="w-9 h-9 bg-white dark:bg-gray-800/20 rounded-lg flex items-center justify-center text-lg">🔍</div>
                 <div className="text-left">
                   <div className="font-semibold">Mulai dari sini</div>
                   <div className="text-sm text-red-100">Eksplorasi lebih dalam bersama Ready</div>
@@ -574,7 +574,7 @@ export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
               </div>
               <ArrowRight className="w-5 h-5" />
             </button>
-            <button onClick={() => onNext('skip')} className="w-full flex items-center justify-center px-6 py-4 bg-white border-2 border-gray-200 text-gray-500 rounded-xl hover:border-gray-300 transition-all font-medium text-sm">
+            <button onClick={() => onNext('skip')} className="w-full flex items-center justify-center px-6 py-4 bg-white dark:bg-gray-800 border-2 border-gray-200 text-gray-500 rounded-xl hover:border-gray-300 transition-all font-medium text-sm">
               Skip
             </button>
           </div>
@@ -594,11 +594,11 @@ export default function DiagnosticFlow({ onComplete }: DiagnosticFlowProps) {
           {options.map(option => (
             <button key={option} onClick={() => onSelect(option)}
               className={`w-full text-left px-4 py-3 rounded-xl transition-all border-2 text-sm
-              ${selected === option ? 'bg-red-50 border-red-300 text-red-900' : 'bg-white border-gray-200 hover:border-gray-300 text-gray-700'}`}
+              ${selected === option ? 'bg-red-50 border-red-300 text-red-900' : 'bg-white dark:bg-gray-800 border-gray-200 hover:border-gray-300 text-gray-700'}`}
             >
               <div className="flex items-center gap-3">
                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center flex-shrink-0 ${selected === option ? 'bg-red-600 border-red-600' : 'border-gray-300'}`}>
-                  {selected === option && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                  {selected === option && <div className="w-1.5 h-1.5 bg-white dark:bg-gray-800 rounded-full" />}
                 </div>
                 <span className="font-medium">{option}</span>
               </div>

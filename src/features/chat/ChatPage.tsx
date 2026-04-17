@@ -9,10 +9,10 @@ import DiagnosticFlow from "./components/DiagnosticFlow";
 import EngineFlow from "./components/EngineFlow";
 import PremiumModal, { type PremiumModalReason } from "./components/PremiumModal";
 import { useQueryClient } from "@tanstack/react-query";
-import { consumeQuota, getRemainingQuota } from "./hooks/usePremium";
+import { consumeQuota, getRemainingQuota, isAdminRole } from "./hooks/usePremium";
 import { usePaymentStatus, paymentKeys } from "@/app/api/payment/usePaymentApi";
 import { useAuth } from '@/app/auth';
-import { isAdminRole } from './hooks/usePremium';
+import type { EngineTopic, EngineSubMode, EngineAnswers } from "@/app/api/chat";
 
 const TOPIC_LABELS: Record<string, string> = {
   marketing: "Marketing Strategy",
@@ -50,44 +50,46 @@ export default function ChatPage() {
   // ── Gated send ──────────────────────────────────────────────────────────────
   const handleSend = useCallback(
     (overrideText?: string) => {
-      if (!bypassLock && !consumeQuota(isPremium)) {
+      if (!bypassLock && !consumeQuota(
+        isPremium,
+        chat.mode,
+        chat.engineTopic ?? undefined,
+        chat.engineSubMode ?? undefined
+      )) {
         setPremiumReason("quota_limit");
-        setPremiumTopicName(undefined);
         setPremiumOpen(true);
         return;
       }
       setClarifyDismissed(false);
       chat.sendMessage(overrideText);
     },
-    [chat, isPremium]
+    [chat, isPremium, bypassLock]
   );
 
   // ── Gated Engine flow complete ──────────────────────────────────────────────
-  const handleEngineFlowComplete = useCallback(
-    async (
-      analysis: string,
-      topic: Parameters<typeof chat.handleEngineComplete>[1],
-      subMode: Parameters<typeof chat.handleEngineComplete>[2],
-      answers: Parameters<typeof chat.handleEngineComplete>[3]
-    ) => {
-      if (!bypassLock && !consumeQuota(isPremium)) {
-        setPremiumReason("quota_limit");
-        setPremiumTopicName(undefined);
-        setPremiumOpen(true);
-        return;
-      }
-      await chat.handleEngineComplete(analysis, topic, subMode, answers);
-    },
-    [chat, isPremium]
-  );
-
+const handleEngineFlowComplete = useCallback(
+  async (
+    _analysis: string,
+    topic: EngineTopic,
+    subMode: EngineSubMode,
+    _answers: EngineAnswers
+  ) => {
+    if (!bypassLock && !consumeQuota(isPremium, 'engine', topic, subMode)) {
+      setPremiumReason("quota_limit");
+      setPremiumOpen(true);
+      return;
+    }
+    await chat.handleEngineComplete(_analysis, topic, subMode, _answers);
+  },
+  [chat, isPremium, bypassLock]
+);
   // ── Setelah payment success, refresh status premium ─────────────────────────
   const handlePaymentSuccess = useCallback(() => {
     queryClient.invalidateQueries({ queryKey: paymentKeys.status() });
   }, [queryClient]);
 
   return (
-    <div className="h-screen flex bg-gray-50">
+    <div className="h-screen flex bg-white dark:bg-gray-900">
       <ChatSidebar
         open={sidebarOpen}
         collapsed={sidebarCollapsed}
@@ -102,7 +104,8 @@ export default function ChatPage() {
           if (chat.sessionId === sessionId) chat.newChat();
         }}
         isPremium={isPremium}
-        remainingQuota={getRemainingQuota(isPremium)}
+        // di ChatPage.tsx, pass quota sesuai mode aktif
+        remainingQuota={getRemainingQuota(isPremium, chat.mode, chat.engineTopic ?? undefined, chat.engineSubMode ?? undefined)}
         onUpgrade={() => {
           setPremiumReason("quota_limit");
           setPremiumTopicName(undefined);
@@ -111,6 +114,16 @@ export default function ChatPage() {
       />
 
       <div className="flex-1 flex flex-col min-w-0">
+        <div className="md:hidden flex items-center px-4 py-3 border-b border-gray-200 dark:border-gray-700">
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors text-gray-500"
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+            </svg>
+          </button>
+        </div>
         {chat.mode === "engine" ? (
           chat.messages.length === 0 ? (
             <EngineFlow
@@ -149,6 +162,7 @@ export default function ChatPage() {
                 clarifyOptions={clarifyData.isClarify ? clarifyData.options : undefined}
                 onClarifySelect={(text) => { setClarifyDismissed(true); handleSend(text); }}
                 onClarifyDismiss={() => setClarifyDismissed(true)}
+                onStop={chat.stopGeneration}
               />
             </>
           )
@@ -183,6 +197,7 @@ export default function ChatPage() {
               clarifyOptions={clarifyData.isClarify ? clarifyData.options : undefined}
               onClarifySelect={(text) => { setClarifyDismissed(true); handleSend(text); }}
               onClarifyDismiss={() => setClarifyDismissed(true)}
+              onStop={chat.stopGeneration}
             />
           </>
         )}
@@ -193,6 +208,7 @@ export default function ChatPage() {
         open={premiumOpen}
         reason={premiumReason}
         topicName={premiumTopicName}
+        mode={chat.mode}   
         onClose={() => setPremiumOpen(false)}
         onPaymentSuccess={handlePaymentSuccess}
       />

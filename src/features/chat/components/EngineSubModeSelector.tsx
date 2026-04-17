@@ -128,7 +128,7 @@ export default function EngineSubModeSelector({ selectedTopic, onSubModeSelect, 
           className={`
             group relative p-8 rounded-2xl border-2 transition-all text-left
             hover:border-blue-400 hover:shadow-xl hover:-translate-y-1
-            ${selectedMode === "idea" ? "border-blue-500 bg-blue-50 shadow-lg -translate-y-1" : "border-gray-200 bg-white"}
+            ${selectedMode === "idea" ? "border-blue-500 bg-blue-50 shadow-lg -translate-y-1" : "border-gray-200 bg-white dark:bg-gray-800 bg-white dark:bg-gray-800 "}
           `}
         >
           {selectedMode === "idea" && (
@@ -167,7 +167,7 @@ export default function EngineSubModeSelector({ selectedTopic, onSubModeSelect, 
               ${analysisLocked
                 ? "border-amber-200 bg-amber-50/40 hover:border-amber-300 hover:shadow-md"
                 : `hover:border-green-400 hover:shadow-xl hover:-translate-y-1
-                   ${selectedMode === "analysis" ? "border-green-500 bg-green-50 shadow-lg -translate-y-1" : "border-gray-200 bg-white"}`
+                   ${selectedMode === "analysis" ? "border-green-500 bg-green-50 shadow-lg -translate-y-1" : "border-gray-200 bg-white dark:bg-gray-800 "}`
               }
             `}
           >

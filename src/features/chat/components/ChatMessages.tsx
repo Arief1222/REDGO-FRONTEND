@@ -1,9 +1,9 @@
-import { User, Download } from "lucide-react";
+import { Download } from "lucide-react";
 import type { ChatMessage } from "@/app/api/chat";
 import type { RefObject } from "react";
 import logoImage from "/maskot.png";
 import ChatAttachment from "./ChatAttachment";
-import { exportToExcel, exportToCSV } from '../hooks/exportTable';
+import { exportToExcel } from '../hooks/exportTable';
 
 const TOPICS = [
   { id: 'branding', label: 'Branding', emoji: '🎨' },
@@ -19,54 +19,54 @@ type Props = {
 };
 
 // ✅ Parse [CLARIFY] block dari AI response
-function parseClarifyBlock(text: string): { isClarify: boolean; question: string; options: { label: string; text: string }[] } {
-  const match = text.match(/\[CLARIFY\]([\s\S]*?)\[\/CLARIFY\]/);
-  if (!match) return { isClarify: false, question: '', options: [] };
+// function parseClarifyBlock(text: string): { isClarify: boolean; question: string; options: { label: string; text: string }[] } {
+//   const match = text.match(/\[CLARIFY\]([\s\S]*?)\[\/CLARIFY\]/);
+//   if (!match) return { isClarify: false, question: '', options: [] };
 
-  const inner = match[1].trim();
-  const lines = inner.split('\n').map(l => l.trim()).filter(Boolean);
+//   const inner = match[1].trim();
+//   const lines = inner.split('\n').map(l => l.trim()).filter(Boolean);
 
-  const question = lines[0] || '';
-  const options: { label: string; text: string }[] = [];
+//   const question = lines[0] || '';
+//   const options: { label: string; text: string }[] = [];
 
-  for (let i = 1; i < lines.length; i++) {
-    const optMatch = lines[i].match(/^([A-D])\.\s+(.+)/);
-    if (optMatch) {
-      options.push({ label: optMatch[1], text: optMatch[2] });
-    }
-  }
+//   for (let i = 1; i < lines.length; i++) {
+//     const optMatch = lines[i].match(/^([A-D])\.\s+(.+)/);
+//     if (optMatch) {
+//       options.push({ label: optMatch[1], text: optMatch[2] });
+//     }
+//   }
 
-  return { isClarify: true, question, options };
-}
+//   return { isClarify: true, question, options };
+// }
 
-// ✅ Clarify Card component
-function ClarifyCard({ question, options, onSelect }: {
-  question: string;
-  options: { label: string; text: string }[];
-  onSelect?: (text: string) => void;
-}) {
-  return (
-    <div className="space-y-3">
-      <p className="text-gray-700 leading-relaxed">{question}</p>
-      <div className="flex flex-col gap-2">
-        {options.map((opt) => (
-          <button
-            key={opt.label}
-            onClick={() => onSelect?.(opt.text)}
-            className="flex items-center gap-3 px-4 py-3 bg-gray-50 hover:bg-red-50 border-2 border-gray-200 hover:border-red-300 rounded-xl transition-all text-left group"
-          >
-            <span className="flex-shrink-0 w-7 h-7 rounded-lg bg-white border-2 border-gray-200 group-hover:border-red-300 group-hover:bg-red-50 flex items-center justify-center text-xs font-bold text-gray-500 group-hover:text-red-600 transition-all">
-              {opt.label}
-            </span>
-            <span className="text-sm text-gray-700 group-hover:text-red-700 font-medium transition-colors">
-              {opt.text}
-            </span>
-          </button>
-        ))}
-      </div>
-    </div>
-  );
-}
+// // ✅ Clarify Card component
+// function ClarifyCard({ question, options, onSelect }: {
+//   question: string;
+//   options: { label: string; text: string }[];
+//   onSelect?: (text: string) => void;
+// }) {
+//   return (
+//     <div className="space-y-3">
+//       <p className="text-gray-700 leading-relaxed">{question}</p>
+//       <div className="flex flex-col gap-2">
+//         {options.map((opt) => (
+//           <button
+//             key={opt.label}
+//             onClick={() => onSelect?.(opt.text)}
+//             className="flex items-center gap-3 px-4 py-3 bg-gray-50 hover:bg-red-50 border-2 border-gray-200 hover:border-red-300 rounded-xl transition-all text-left group"
+//           >
+//             <span className="flex-shrink-0 w-7 h-7 rounded-lg bg-white dark:bg-gray-800 border-2 border-gray-200 group-hover:border-red-300 group-hover:bg-red-50 flex items-center justify-center text-xs font-bold text-gray-500 group-hover:text-red-600 transition-all">
+//               {opt.label}
+//             </span>
+//             <span className="text-sm text-gray-700 group-hover:text-red-700 font-medium transition-colors">
+//               {opt.text}
+//             </span>
+//           </button>
+//         ))}
+//       </div>
+//     </div>
+//   );
+// }
 
 function formatAIResponse(text: string) {
   const lines = text.split('\n');
@@ -245,7 +245,7 @@ export default function ChatMessages({ messages, loading, endRef, showTopicButto
   })();
 
   return (
-    <div className="flex-1 overflow-y-auto px-4 py-8 bg-white">
+    <div className="flex-1 overflow-y-auto px-4 py-8 bg-white dark:bg-gray-800">
       <div className="max-w-4xl mx-auto space-y-6">
         {messages.map((m, index) => (
           <div key={m.id}>
@@ -268,7 +268,7 @@ export default function ChatMessages({ messages, loading, endRef, showTopicButto
                 </div>
 
                 <div className="flex-1 min-w-0">
-                  <div className="rounded-2xl px-5 py-4 bg-white shadow-sm border border-gray-100">
+                  <div className="rounded-2xl px-5 py-4 bg-white dark:bg-gray-800 shadow-sm border border-gray-100">
                     {m.attachment && <div className="mb-3"><ChatAttachment attachment={m.attachment} /></div>}
                     <div className="prose prose-sm max-w-none">
                       {formatAIResponse(m.content)}
@@ -282,7 +282,7 @@ export default function ChatMessages({ messages, loading, endRef, showTopicButto
                         <button
                           key={topic.id}
                           onClick={() => onQuickReply(topic.label)}
-                          className="flex items-center gap-2 px-4 py-2 bg-white border-2 border-gray-200 rounded-xl hover:border-red-300 hover:bg-red-50 hover:text-red-700 transition-all text-sm font-medium text-gray-700 shadow-sm"
+                          className="flex items-center gap-2 px-4 py-2 bg-white dark:bg-gray-800 border-2 border-gray-200 rounded-xl hover:border-red-300 hover:bg-red-50 hover:text-red-700 transition-all text-sm font-medium text-gray-700 shadow-sm"
                         >
                           <span>{topic.emoji}</span>
                           {topic.label}

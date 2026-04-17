@@ -6,8 +6,9 @@
 export const ROUTES = {
   // Root
   ROOT: '/',
+  LANDING: '/', 
   ROOT_PUBLIC: '/auth',
-  
+ 
   // Dashboard
   DASHBOARD: '/',
   SAMPLE_PAGE: '/sample-page',

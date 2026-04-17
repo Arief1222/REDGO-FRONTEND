@@ -94,6 +94,24 @@ export default function NavBar({ onGoToLogin }: NavBarProps) {
         }
 
       }
+      
+          @keyframes gp-wiggle {
+          0%,100% { transform: rotate(0deg) scale(1); }
+          20%     { transform: rotate(-15deg) scale(1.15); }
+          40%     { transform: rotate(10deg) scale(1.1); }
+          60%     { transform: rotate(-8deg) scale(1.12); }
+          80%     { transform: rotate(5deg) scale(1.05); }
+        }
+        @keyframes btn-pop1 { 0%,100%{transform:translateY(0)} 25%{transform:translateY(-4px)} }
+        @keyframes btn-pop2 { 0%,100%{transform:translateY(0)} 40%{transform:translateY(-4px)} }
+        @keyframes btn-pop3 { 0%,100%{transform:translateY(0)} 55%{transform:translateY(-4px)} }
+        @keyframes btn-pop4 { 0%,100%{transform:translateY(0)} 70%{transform:translateY(-4px)} }
+
+        .gp-body { transform-origin: 30px 20px; animation: gp-wiggle 1.8s ease-in-out infinite; }
+        .gp-btn1 { transform-origin: 44px 15px; animation: btn-pop1 1.8s ease-in-out infinite; }
+        .gp-btn2 { transform-origin: 38px 19px; animation: btn-pop2 1.8s ease-in-out infinite; }
+        .gp-btn3 { transform-origin: 50px 19px; animation: btn-pop3 1.8s ease-in-out infinite; }
+        .gp-btn4 { transform-origin: 44px 23px; animation: btn-pop4 1.8s ease-in-out infinite; }
 
       `}</style>
 
@@ -137,8 +155,12 @@ export default function NavBar({ onGoToLogin }: NavBarProps) {
             </button>
 
             <button
-              onClick={onGoToLogin}
+              onClick={() => window.location.href = "/BrainGame/"}
+              className="btn-drill"
               style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "8px",
                 height: "34px",
                 background: "#D93B2B",
                 border: "none",
@@ -146,10 +168,24 @@ export default function NavBar({ onGoToLogin }: NavBarProps) {
                 borderRadius: "8px",
                 fontWeight: 700,
                 cursor: "pointer",
-                padding: "0 16px"
+                padding: "0 16px",
               }}
             >
-              Chat with Ready
+              Mainkan Brain Drill
+              <svg width="24" height="18" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
+                <g className="gp-body">
+                  <rect x="5" y="7" width="50" height="22" rx="8" fill="white" />
+                  <ellipse cx="10" cy="27" rx="9" ry="7" fill="white" />
+                  <ellipse cx="50" cy="27" rx="9" ry="7" fill="white" />
+                  <rect x="8" y="15" width="14" height="5" rx="2" fill="#D93B2B" />
+                  <rect x="12" y="11" width="5" height="14" rx="2" fill="#D93B2B" />
+                  <rect x="26" y="13" width="8" height="5" rx="2" fill="#D93B2B" opacity="0.7" />
+                </g>
+                <circle className="gp-btn1" cx="44" cy="15" r="3" fill="white" />
+                <circle className="gp-btn2" cx="38" cy="19" r="3" fill="white" />
+                <circle className="gp-btn3" cx="50" cy="19" r="3" fill="white" />
+                <circle className="gp-btn4" cx="44" cy="23" r="3" fill="white" />
+              </svg>
             </button>
 
           </div>
@@ -242,7 +278,7 @@ export default function NavBar({ onGoToLogin }: NavBarProps) {
               </button>
 
               <button
-                onClick={onGoToLogin}
+                onClick={() => window.location.href = "/BrainGame/"}
                 style={{
                   height: "44px",
                   borderRadius: "10px",
@@ -250,10 +286,28 @@ export default function NavBar({ onGoToLogin }: NavBarProps) {
                   background: "#D93B2B",
                   color: "white",
                   fontWeight: 700,
-                  cursor: "pointer"
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "8px"
                 }}
               >
-                Chat with Ready
+                Mainkan Brain Drill
+                <svg width="24" height="18" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
+                  <g className="gp-body">
+                    <rect x="5" y="7" width="50" height="22" rx="8" fill="white" />
+                    <ellipse cx="10" cy="27" rx="9" ry="7" fill="white" />
+                    <ellipse cx="50" cy="27" rx="9" ry="7" fill="white" />
+                    <rect x="8" y="15" width="14" height="5" rx="2" fill="#D93B2B" />
+                    <rect x="12" y="11" width="5" height="14" rx="2" fill="#D93B2B" />
+                    <rect x="26" y="13" width="8" height="5" rx="2" fill="#D93B2B" opacity="0.7" />
+                  </g>
+                  <circle className="gp-btn1" cx="44" cy="15" r="3" fill="white" />
+                  <circle className="gp-btn2" cx="38" cy="19" r="3" fill="white" />
+                  <circle className="gp-btn3" cx="50" cy="19" r="3" fill="white" />
+                  <circle className="gp-btn4" cx="44" cy="23" r="3" fill="white" />
+                </svg>
               </button>
 
             </div>

@@ -173,7 +173,7 @@ const HeroSection = ({ onGoToLogin }: HeroSectionProps) => {
         <div className="hero-left" style={{ position: "absolute", left: "56px", top: 0, bottom: 0, display: "flex", flexDirection: "column", justifyContent: "center", width: "620px" }}>
           <div className="anim-fade-up" style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(217,59,43,0.07)", borderRadius: "100px", padding: "5px 14px 5px 10px", marginBottom: "24px", width: "fit-content" }}>
             <span style={{ width: "8px", height: "8px", background: "#D93B2B", borderRadius: "50%", display: "inline-block" }} />
-            <span className="hero-badge" style={{ fontFamily: "Inter", fontWeight: 700, fontSize: "12px", color: "#D93B2B" }}>Ready by RedGo AI — Your AI Business Partner</span>
+            <span className="hero-badge" style={{ fontFamily: "Inter", fontWeight: 700, fontSize: "12px", color: "#D93B2B" }}>RedGo AI - Space to Think Your Business</span>
           </div>
 
           <div className="anim-fade-up delay-100" style={{ marginBottom: "24px" }}>

@@ -3,18 +3,18 @@ import AuthResetPassword from "./components/forms/AuthResetPassword"
 import LeftSidebarPart from "./components/LeftSidebarPart"
 import { ROUTES } from "@/app/constants/router"
 
-const ChevronLeft = ({ size = 14 }: { size?: number }) => (
-  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-    <path d="M15 18l-6-6 6-6"/>
-  </svg>
-)
+// const ChevronLeft = ({ size = 14 }: { size?: number }) => (
+//   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+//     <path d="M15 18l-6-6 6-6"/>
+//   </svg>
+// )
 
-const backBtnStyle: React.CSSProperties = {
-  display: "inline-flex", alignItems: "center", gap: "5px",
-  background: "none", border: "none", cursor: "pointer",
-  color: "#9ca3af", fontSize: "12px", fontWeight: 600,
-  fontFamily: "inherit", transition: "color 0.15s", letterSpacing: "0.01em",
-}
+// const backBtnStyle: React.CSSProperties = {
+//   display: "inline-flex", alignItems: "center", gap: "5px",
+//   background: "none", border: "none", cursor: "pointer",
+//   color: "#9ca3af", fontSize: "12px", fontWeight: 600,
+//   fontFamily: "inherit", transition: "color 0.15s", letterSpacing: "0.01em",
+// }
 
 const ResetPasswordPage = () => {
   return (

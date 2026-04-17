@@ -1,7 +1,7 @@
 // src/app/chat/hooks/useChat.ts - FIXED: Mode persistence on new chat
 
 import { useEffect, useRef, useState } from "react";
-import { useSendMessage, useSaveDiagnostic, chatApi } from "@/app/api/chat";
+import { useSaveDiagnostic, chatApi } from "@/app/api/chat";
 import { useQueryClient } from "@tanstack/react-query";
 import { storageService } from '@/app/services/storageService';
 import type {
@@ -65,7 +65,7 @@ export function useChat() {
   const sessionIdRef = useRef(sessionId);
 
   // ===== MUTATIONS =====
-  const sendMessageMutation = useSendMessage();
+  // const sendMessageMutation = useSendMessage();
   const saveDiagnosticMutation = useSaveDiagnostic();
   const handleTopicSelect = (topicLabel: string) => {
     setShowTopicButtons(false); // ✅ sembunyikan buttons
@@ -202,7 +202,7 @@ export function useChat() {
       abortControllerRef.current = new AbortController();
 
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/core/v1/chat/stream`,
+        `${import.meta.env.VITE_API_URL || 'https://api.airedgo.com'}/core/v1/chat/stream`,
         {
           method: "POST",
           headers: {
@@ -347,17 +347,18 @@ export function useChat() {
 
   // ✅ Handle Engine flow completion - load messages from backend
   const handleEngineComplete = async (
-    analysis: string,
+    _analysis: string,
     topic: EngineTopic,
     subMode: EngineSubMode,
-    answers: Record<string, string>
+    _answers: Record<string, string>
   ) => {
     const currentSessionId = sessionIdRef.current; // ✅ capture dulu sebelum apapun
     console.log("✅ sessionId yang dipakai:", currentSessionId);
 
     setEngineTopic(topic);
     setEngineSubMode(subMode);
-    setMode("engine");
+      _setMode("engine");
+  localStorage.setItem('chat-mode', 'engine');
 
     const assistantId = `${Date.now()}-assistant`;
     setMessages([{
@@ -372,7 +373,7 @@ export function useChat() {
       const token = storageService.get<string>('token') || '';
       abortControllerRef.current = new AbortController();
       const response = await fetch(
-        `${import.meta.env.VITE_API_URL || 'http://localhost:3000'}/core/v1/engine/analyze/stream`,
+        `${import.meta.env.VITE_API_URL || 'https://api.airedgo.com'}/core/v1/engine/analyze/stream`,
         {
           method: "POST",
           headers: {
@@ -430,70 +431,52 @@ export function useChat() {
     }
   };
   // ✅ loadChatSession with Engine mode support
-  const loadChatSession = async (targetSessionId: string) => {
-    try {
-      console.log("🔄 Loading chat session:", targetSessionId);
-      setLoading(true);
-      setMessages([]);
+ const loadChatSession = async (targetSessionId: string) => {
+  try {
+    setLoading(true);
+    setMessages([]);
 
-      const res = await chatApi.getSessionMessages(targetSessionId);
-      console.log("📥 Raw response:", JSON.stringify(res.data, null, 2));
+    const res = await chatApi.getSessionMessages(targetSessionId);
+    console.log("📥 session response:", res.data);
 
-      if (!res.data || !res.data.messages || res.data.messages.length === 0) {
-        console.log("⚠️ No messages found");
-        setSessionId(targetSessionId);
-        setMessages([]);
-        setMode("discuss");
-        return;
-      }
+    const resolvedMode = (res.data.session_mode || 'discuss') as Mode;
 
-      // ✅ Get mode, topic, and sub_mode from last message
-      const lastBackendMsg = res.data.messages[res.data.messages.length - 1];
+    _setMode(resolvedMode);
+    localStorage.setItem('chat-mode', resolvedMode);
 
-      if (
-        lastBackendMsg?.Mode &&
-        ["diagnostic", "discuss", "engine", "explorer"].includes(lastBackendMsg.Mode)
-      ) {
-        // ✅ Diagnostic history harus ditampilkan sebagai discuss
-        // karena DiagnosticFlow adalah onboarding flow, bukan chat view
-        const resolvedMode = lastBackendMsg.Mode === "diagnostic" ? "diagnostic" : lastBackendMsg.Mode as Mode;
-        setMode(resolvedMode);
-
-        if (lastBackendMsg.Mode === 'engine') {
-          if (lastBackendMsg.Topic) setEngineTopic(lastBackendMsg.Topic as EngineTopic);
-          if (lastBackendMsg.SubMode) setEngineSubMode(lastBackendMsg.SubMode as EngineSubMode);
-        }
-      } else {
-        setMode("discuss");
-      }
-
-      // Map messages
-      const formattedMessages: ChatMessage[] = res.data.messages.map(
-        (msg: BackendChatMessage) => ({
-          id: msg.ID.toString(),
-          role: msg.Role,
-          content: msg.Content,
-          timestamp: msg.CreatedAt,
-        })
-      );
-
-      console.log("✅ Formatted messages count:", formattedMessages.length);
-
-      setSessionId(targetSessionId);
-      setMessages(formattedMessages);
-
-    } catch (error) {
-      console.error("Failed to load chat:", error);
-      if (error && typeof error === "object" && "response" in error) {
-        const axiosErr = error as { response?: { status: number; data: unknown } };
-        console.error("Status:", axiosErr.response?.status);
-        console.error("Response body:", axiosErr.response?.data);
-      }
-      toast.error("Gagal memuat chat");
-    } finally {
-      setLoading(false);
+    if (resolvedMode === 'engine') {
+      // ✅ Baca dari session level, bukan message
+      if (res.data.topic) setEngineTopic(res.data.topic as EngineTopic);
+      if (res.data.sub_mode) setEngineSubMode(res.data.sub_mode as EngineSubMode);
+    } else {
+      setEngineTopic(null);
+      setEngineSubMode(null);
     }
-  };
+
+    if (!res.data?.messages?.length) {
+      setSessionId(targetSessionId);
+      return;
+    }
+
+    const formattedMessages: ChatMessage[] = res.data.messages.map(
+      (msg: BackendChatMessage) => ({
+        id: msg.ID.toString(),
+        role: msg.Role,
+        content: msg.Content,
+        timestamp: msg.CreatedAt,
+      })
+    );
+
+    setSessionId(targetSessionId);
+    setMessages(formattedMessages);
+
+  } catch (error) {
+    console.error("Failed to load chat:", error);
+    toast.error("Gagal memuat chat");
+  } finally {
+    setLoading(false);
+  }
+};
 
   const handleDeleteSession = (deletedSessionId: string) => {
     // kalau yang didelete adalah sesi yang sedang aktif, reset chat

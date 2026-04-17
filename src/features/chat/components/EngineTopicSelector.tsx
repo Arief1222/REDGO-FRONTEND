@@ -124,7 +124,7 @@ export default function EngineTopicSelector({ onTopicSelect }: Props) {
               className={`
                 group relative p-6 rounded-2xl border-2 transition-all text-left
                 hover:border-red-400 hover:shadow-lg
-                ${selected ? 'border-red-500 bg-red-50 shadow-lg' : 'border-gray-200 bg-white'}
+                ${selected ? 'border-red-500 bg-red-50 shadow-lg' : 'border-gray-200 bg-white dark:bg-gray-800'}
               `}
             >
               {/* Badge lock pojok kanan atas */}
