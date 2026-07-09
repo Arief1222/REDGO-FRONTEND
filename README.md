@@ -44,7 +44,7 @@ public/Screenshot 2026-05-09 103630.png
  
 | Landing | Probe Mode | Thrive Mode |
 |---|---|---|
-| ![Landing page](public/landingPage.png) | ![Diagnosis entry](public/oribe.png) | ![Topic selection](public/thrive.png) |
+| ![Landing page](public/landingPage.png) | ![Diagnosis entry](public/probe.png) | ![Topic selection](public/thrive.png) |
  
 ---
 
