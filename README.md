@@ -47,17 +47,17 @@ This repository contains the **React frontend** — the client interface for the
 
 ## Architecture Preview
 
-```
-                 React (this repo)
-                        │
-                        ▼
-                    Go API
-                        │
-                        ▼
-                    OpenAI
-                        │
-                        ▼
-              Business Knowledge (RAG)
+```mermaid
+flowchart TD
+
+A[React Frontend<br/>this repo]
+B[Go API]
+C[OpenAI]
+D[Business Knowledge<br/>RAG]
+
+A --> B
+B --> C
+C --> D
 ```
 
 Full system design, prompt architecture, and RAG pipeline details live in the [backend repository](#backend-repository).
