@@ -23,7 +23,7 @@ Instead of answering questions directly like a generic chatbot, RedGo first guid
 
 This repository contains the **React frontend** — the client interface for the diagnosis flow, AI chat, and the admin tools (prompt, knowledge base, role, and user management) that power the platform.
 
-> The backend (Go API, AI workflow, RAG pipeline) lives in a separate repository — see [Backend Repository](#REDGO-BACKEND).
+> The backend (Go API, AI workflow, RAG pipeline) lives in a separate repository — see [Backend Repository]([#REDGO-BACKEND](https://github.com/Arief1222/REDGO-BACKEND)).
 
 ---
 
