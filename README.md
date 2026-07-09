@@ -1,175 +1,264 @@
-# Getting Started with Create React App
+<div align="center">
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+# RedGo AI — Frontend
 
-## Available Scripts
+**AI-powered Business Consultation Platform**
+Turning expert business reasoning into structured, AI-driven decision support.
 
-In the project directory, you can run:
+![Status](https://img.shields.io/badge/status-Prototype-orange)
+![Frontend](https://img.shields.io/badge/frontend-React%2019%20%7C%20TypeScript-61DAFB)
+![Build](https://img.shields.io/badge/build-Vite-646CFF)
+![UI](https://img.shields.io/badge/UI-MUI%20%7C%20Tailwind-007FFF)
+![License](https://img.shields.io/badge/license-Private-lightgrey)
 
-### `npm start`
+</div>
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+---
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+## Overview
 
-### `npm test`
+RedGo AI enables founders and SMEs to receive structured business guidance through an AI-powered consultation experience inspired by real-world business consulting practices.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+Instead of answering questions directly like a generic chatbot, RedGo first guides users through a structured business diagnosis to uncover the real constraints behind their problem — then generates recommendations grounded in an expert-designed decision framework using Retrieval-Augmented Generation (RAG).
 
-### `npm run build`
+This repository contains the **React frontend** — the client interface for the diagnosis flow, AI chat, and the admin tools (prompt, knowledge base, role, and user management) that power the platform.
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+> The backend (Go API, AI workflow, RAG pipeline) lives in a separate repository — see [Backend Repository](#backend-repository).
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+---
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+## Features
 
-### `npm run eject`
+- 🧭 **Structured Business Diagnosis** — guided questionnaire before any AI response, so users uncover the real problem first
+- 💬 **AI Consultation Chat** — attachments, voice input, conversation export
+- 📚 **Knowledge Base (RAG) Management** — manage the business knowledge the AI retrieves from
+- 📝 **Prompt Management** — edit and version the reasoning prompts behind the AI
+- 👥 **Role & User Management** — permission-based access control for the platform
+- 🔐 **Full Auth Flow** — login, register, forgot/reset password, 2FA, OAuth callback
+- 🌍 **Multi-language** — English, Arabic, Chinese, French
+- 🌓 **Dark Mode**
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+---
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+## Screenshots
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+> _Add product screenshots or a short demo GIF here once available — this is one of the highest-impact sections for reviewers._
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+| Landing | Diagnosis | Chat |
+|---|---|---|
+| _screenshot_ | _screenshot_ | _screenshot_ |
 
-## E2E Testing with Playwright
+---
 
-This project uses [Playwright](https://playwright.dev/) for end-to-end testing. Playwright enables reliable end-to-end testing for modern web apps across all browsers.
+## Architecture Preview
+
+```
+                 React (this repo)
+                        │
+                        ▼
+                    Go API
+                        │
+                        ▼
+                    OpenAI
+                        │
+                        ▼
+              Business Knowledge (RAG)
+```
+
+Full system design, prompt architecture, and RAG pipeline details live in the [backend repository](#backend-repository).
+
+---
+
+## UI Flow
+
+```
+Landing → Diagnosis → Chat → Recommendation
+```
+
+The product deliberately front-loads **Diagnosis** before **Chat** — the AI doesn't answer until it understands the business context first.
+
+---
+
+## Tech Stack
+
+Versions reflect `package.json` exactly.
+
+| Category | Stack |
+|---|---|
+| Framework | React 19, TypeScript 5.5 |
+| Build Tool | Vite 5 |
+| UI | Material UI (MUI) v7, Emotion |
+| Styling | Tailwind CSS 3, tailwind-merge, class-variance-authority |
+| Routing | React Router v7 (data mode) |
+| Data/State | TanStack Query v5 |
+| Forms | React Hook Form |
+| i18n | i18next, react-i18next |
+| Animation | Framer Motion, React Spring |
+| HTTP | Axios |
+| Markdown | react-markdown, remark |
+| Audio | react-media-recorder |
+| Testing | Playwright (E2E) |
+| Linting | ESLint 9, typescript-eslint |
+
+---
+
+## Project Structure
+
+```
+frontend/
+├── src/
+│   ├── app/                     # Core: api clients, auth, guards, providers, router, services
+│   │   ├── api/                  # auth, chat, payment, permission, prompt, rag, role, user
+│   │   ├── guards/                # Route guards (Auth, Admin, Guest, Permission)
+│   │   └── router/                # Route definitions & navigation config
+│   │
+│   ├── features/                 # Feature-based modules
+│   │   ├── auth/                  # Login, register, 2FA, landing page
+│   │   ├── chat/                  # AI chat: diagnosis flow, engine questionnaire
+│   │   ├── prompts/                # Prompt management (CRUD)
+│   │   ├── rag/                    # Knowledge base management
+│   │   ├── role/                   # Role & permission management
+│   │   └── user/                   # User management
+│   │
+│   ├── shared/                    # Layouts, design system (venturo-ui), hooks, i18n, theme
+│   │
+│   ├── App.tsx
+│   └── main.tsx
+│
+├── tests/                        # Playwright E2E tests
+├── vite.config.ts
+├── tailwind.config.ts
+└── package.json
+```
+
+<details>
+<summary>Full folder tree</summary>
+
+```
+frontend/
+├── src/
+│   ├── app/
+│   │   ├── api/
+│   │   │   ├── auth/
+│   │   │   ├── chat/
+│   │   │   ├── payment/
+│   │   │   ├── permission/
+│   │   │   ├── prompt/
+│   │   │   ├── rag/
+│   │   │   ├── role/
+│   │   │   └── user/
+│   │   ├── auth/
+│   │   ├── constants/
+│   │   ├── guards/
+│   │   ├── lib/
+│   │   ├── providers/
+│   │   ├── router/
+│   │   └── services/
+│   │
+│   ├── assets/
+│   │
+│   ├── features/
+│   │   ├── auth/
+│   │   ├── chat/
+│   │   ├── errors/
+│   │   ├── prompts/
+│   │   ├── rag/
+│   │   ├── role/
+│   │   ├── sample-page/
+│   │   └── user/
+│   │
+│   ├── shared/
+│   │   ├── components/
+│   │   │   ├── layouts/
+│   │   │   ├── theme-ui/
+│   │   │   └── venturo-ui/
+│   │   ├── contexts/
+│   │   ├── hooks/
+│   │   ├── styles/
+│   │   ├── theme/
+│   │   ├── types/
+│   │   └── utils/
+│   │
+│   ├── App.tsx
+│   └── main.tsx
+│
+├── tests/
+│   ├── e2e/
+│   └── features/auth/
+│
+├── index.html
+├── vite.config.ts
+├── tailwind.config.ts
+├── tsconfig.json
+└── package.json
+```
+
+</details>
+
+---
+
+## Getting Started
 
 ### Prerequisites
+- Node.js ≥ 18
+- npm
 
-Make sure your development server is running before executing E2E tests:
-
-```bash
-npm run dev
-```
-
-The tests are configured to run against `http://localhost:5174` (Vite default port).
-
-### Running E2E Tests
-
-#### Run all tests (headless mode)
-```bash
-npm run test:e2e
-```
-
-#### Run tests in UI mode (interactive)
-```bash
-npm run test:e2e:ui
-```
-This opens the Playwright Test Runner UI where you can:
-- See all your tests
-- Run tests individually or in groups
-- See test results in real-time
-- Debug failing tests
-
-#### Run tests with visible browser (headed mode)
-```bash
-npm run test:e2e:headed
-```
-Watch the browser perform the tests in real-time.
-
-#### Debug tests
-```bash
-npm run test:e2e:debug
-```
-Opens the Playwright Inspector for step-by-step debugging.
-
-#### Show test report
-```bash
-npm run test:e2e:report
-```
-Opens the HTML test report in your browser.
-
-#### Run specific test files
-```bash
-# Login tests only
-npm run test:e2e:login
-
-# Register tests only
-npm run test:e2e:register
-```
-
-#### Generate tests with Codegen
-```bash
-npm run test:e2e:codegen
-```
-Opens Playwright's test generator - interact with your app and it will generate test code automatically.
-
-### Test File Structure
-
-E2E tests are located in the `tests/` directory:
-
-```
-tests/
-├── login.spec.ts      # Login page E2E tests
-├── register.spec.ts   # Registration page E2E tests
-└── ...                # Other E2E test files
-```
-
-### Writing New Tests
-
-Create a new test file in the `tests/` directory with the `.spec.ts` extension:
-
-```typescript
-import { test, expect } from '@playwright/test';
-
-test.describe('Feature Name', () => {
-  test.beforeEach(async ({ page }) => {
-    await page.goto('http://localhost:5174/your-route');
-  });
-
-  test('should do something', async ({ page }) => {
-    // Your test code here
-    await page.getByRole('button', { name: 'Click me' }).click();
-    await expect(page.getByText('Success')).toBeVisible();
-  });
-});
-```
-
-### Test Configuration
-
-Playwright configuration is in `playwright.config.ts`. Key settings:
-
-- **Test directory**: `./tests`
-- **Browsers**: Chromium, Firefox, WebKit
-- **Retries**: 2 on CI, 0 locally
-- **Reporter**: HTML report
-
-### Common Commands
+### Installation
 
 ```bash
-# Run tests in specific browser
-npx playwright test --project=chromium
-npx playwright test --project=firefox
-npx playwright test --project=webkit
-
-# Run tests matching a pattern
-npx playwright test -g "should login successfully"
-
-# Run tests in a specific file
-npx playwright test tests/login.spec.ts
-
-# Update test snapshots
-npx playwright test --update-snapshots
+git clone https://github.com/<your-org>/redgo-ai-frontend.git
+cd redgo-ai-frontend
+npm install
 ```
 
-### Useful Resources
+### Run
 
-- [Playwright Documentation](https://playwright.dev/docs/intro)
-- [Playwright Best Practices](https://playwright.dev/docs/best-practices)
-- [Playwright Locators](https://playwright.dev/docs/locators)
-- [Playwright Assertions](https://playwright.dev/docs/test-assertions)
+```bash
+npm run dev        # http://localhost:5173
+npm run build       # tsc && vite build
+npm run preview
+npm run lint
+```
 
-## Learn More
+### Testing
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+npm run test:e2e         # headless
+npm run test:e2e:ui      # interactive UI
+npm run test:e2e:headed  # watch the browser
+npm run test:e2e:report  # last HTML report
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+---
+
+## Environment Variables
+
+Create a `.env` file in the project root:
+
+```env
+VITE_API_BASE_URL=http://localhost:8080
+VITE_APP_NAME=RedGo AI
+```
+
+> Adjust to match your backend configuration.
+
+---
+
+## Backend Repository
+
+| Repository | Description |
+|---|---|
+| [`redgo-ai-backend`](#) | Go REST API, AI workflow orchestration, RAG pipeline |
+| [`redgo-ai-docs`](#) | System design, prompt architecture, AI evaluation notes |
+
+---
+
+## Project Status
+
+Prototype completed. Development is currently paused while the business strategy and product direction are being refined prior to the next iteration.
+
+---
+
+## License
+
+Private Project.
