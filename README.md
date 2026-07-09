@@ -39,15 +39,13 @@ This repository contains the **React frontend** — the client interface for the
 - 🌓 **Dark Mode**
 
 ---
-
+public/Screenshot 2026-05-09 103630.png
 ## Screenshots
-
-> _Add product screenshots or a short demo GIF here once available — this is one of the highest-impact sections for reviewers._
-
-| Landing | Diagnosis | Chat |
+ 
+| Landing | Probe Mode | Thrive Mode |
 |---|---|---|
-| _screenshot_ | _screenshot_ | _screenshot_ |
-
+| ![Landing page](public/Screenshot 2026-05-09 103630.png) | ![Diagnosis entry](docs/screenshots/diagnosis.png) | ![Topic selection](docs/screenshots/chat-topics.png) |
+ 
 ---
 
 ## Architecture Preview
