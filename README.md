@@ -29,14 +29,12 @@ This repository contains the **React frontend** — the client interface for the
 
 ## Features
 
-- 🧭 **Structured Business Diagnosis** — guided questionnaire before any AI response, so users uncover the real problem first
-- 💬 **AI Consultation Chat** — attachments, voice input, conversation export
-- 📚 **Knowledge Base (RAG) Management** — manage the business knowledge the AI retrieves from
-- 📝 **Prompt Management** — edit and version the reasoning prompts behind the AI
-- 👥 **Role & User Management** — permission-based access control for the platform
-- 🔐 **Full Auth Flow** — login, register, forgot/reset password, 2FA, OAuth callback
-- 🌍 **Multi-language** — English, Arabic, Chinese, French
-- 🌓 **Dark Mode**
+- **Structured Business Diagnosis** — guided questionnaire before any AI response, so users uncover the real problem first
+- **AI Consultation Chat** — attachments, voice input, conversation export
+- **Knowledge Base (RAG) Management** — manage the business knowledge the AI retrieves from
+- **Prompt Management** — edit and version the reasoning prompts behind the AI
+- **Role & User Management** — permission-based access control for the platform
+- **Full Auth Flow** — login, register, forgot/reset password, 2FA, OAuth callback
 
 ---
 public/Screenshot 2026-05-09 103630.png
