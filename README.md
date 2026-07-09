@@ -23,7 +23,7 @@ Instead of answering questions directly like a generic chatbot, RedGo first guid
 
 This repository contains the **React frontend** — the client interface for the diagnosis flow, AI chat, and the admin tools (prompt, knowledge base, role, and user management) that power the platform.
 
-> The backend (Go API, AI workflow, RAG pipeline) lives in a separate repository — see [Backend Repository](#backend-repository).
+> The backend (Go API, AI workflow, RAG pipeline) lives in a separate repository — see [Backend Repository](#REDGO-BACKEND).
 
 ---
 
@@ -37,7 +37,6 @@ This repository contains the **React frontend** — the client interface for the
 - **Full Auth Flow** — login, register, forgot/reset password, 2FA, OAuth callback
 
 ---
-public/Screenshot 2026-05-09 103630.png
 ## Screenshots
  
 | Landing | Probe Mode | Thrive Mode |
@@ -254,6 +253,15 @@ VITE_APP_NAME=RedGo AI
 Prototype completed. Development is currently paused while the business strategy and product direction are being refined prior to the next iteration.
 
 ---
+
+## Design Philosophy
+
+RedGo AI was designed around a simple principle:
+
+Business decisions should not be generated from the language model alone.
+
+Instead, recommendations should be grounded in structured business knowledge and expert-designed decision frameworks, enabling AI to assist users with more consistent and context-aware guidance.
+
 
 ## License
 
